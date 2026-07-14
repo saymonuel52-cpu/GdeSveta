@@ -18,5 +18,12 @@
     "@capacitor/cli": "^8.4.1",
     "@capacitor/core": "^8.4.1"
   },
-  "devDependencies": {}
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saymonuel52-cpu/GdeSveta.git"
+  },
+  "bugs": {
+    "url": "https://github.com/saymonuel52-cpu/GdeSveta/issues"
+  },
+  "homepage": "https://github.com/saymonuel52-cpu/GdeSveta#readme"
 }

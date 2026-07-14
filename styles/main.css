@@ -1,3 +1,4 @@
+@import url("themes.css");
 * {
   margin: 0;
   padding: 0;
@@ -1608,4 +1609,112 @@ body.dark-theme .close-modal:hover {
 
 .theme-toggle:active {
   transform: scale(0.95);
+}
+
+/* Дополнительные улучшения */
+.entry-card {
+  overflow: hidden;
+  position: relative;
+}
+
+.entry-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--accent), var(--accent-secondary));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.entry-card:hover::before {
+  opacity: 1;
+}
+
+/* Анимация появления элементов */
+.entry-card, .note-card {
+  animation: fadeInUp 0.4s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Glassmorphism эффекты */
+header {
+  backdrop-filter: blur(10px);
+}
+
+/* Улучшенные кнопки действий */
+.entry-actions button, .status-buttons button {
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-weight: 600;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.entry-actions button:hover, .status-buttons button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+/* Улучшенный прайс */
+.price-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 15px;
+  margin: 10px 0;
+  transition: all 0.3s;
+}
+
+.price-item:hover {
+  transform: translateX(5px);
+  border-color: var(--accent);
+}
+
+/* Улучшенная статистика */
+.stats-box {
+  padding: 20px;
+  margin: 10px 0;
+}
+
+.stats-box h3 {
+  color: var(--accent);
+  margin-bottom: 15px;
+  font-size: 20px;
+}
+
+/* Фильтры */
+.filter-bar select, .family-filters button, .note-filters button {
+  border-radius: 10px;
+  padding: 8px 16px;
+  margin: 5px;
+  border: 2px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-bar select:focus, .family-filters button:focus, .note-filters button:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.family-filters button.active, .note-filters button.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
 }

@@ -1,0 +1,251 @@
+/* ===========================================
+   СИСТЕМА ТЕМ ДЛЯ ГДЕСВЕТА
+   =========================================== */
+
+/* === ТЁМНАЯ ТЕМА (Default) === */
+body.dark-theme {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: #1e293b;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --accent: #ff6b9d;
+  --accent-secondary: #ff8e53;
+  --border: #334155;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --shadow: rgba(0, 0, 0, 0.3);
+}
+
+/* === СВЕТЛАЯ ТЕМА === */
+body.light-theme {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --accent: #ff6b9d;
+  --accent-secondary: #ff8e53;
+  --border: #e2e8f0;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --shadow: rgba(0, 0, 0, 0.1);
+}
+
+/* === РОЗОВАЯ ТЕМА === */
+body.pink-theme {
+  --bg-primary: #fce7f3;
+  --bg-secondary: #fbcfe8;
+  --bg-card: #ffffff;
+  --text-primary: #831843;
+  --text-secondary: #be185d;
+  --accent: #ec4899;
+  --accent-secondary: #f472b6;
+  --border: #f9a8d4;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --shadow: rgba(236, 72, 153, 0.15);
+}
+
+/* === СИНИЯ ТЕМА === */
+body.blue-theme {
+  --bg-primary: #1e3a8a;
+  --bg-secondary: #1e40af;
+  --bg-card: #1e40af;
+  --text-primary: #dbeafe;
+  --text-secondary: #93c5fd;
+  --accent: #60a5fa;
+  --accent-secondary: #93c5fd;
+  --border: #3b82f6;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #f87171;
+  --shadow: rgba(0, 0, 0, 0.2);
+}
+
+/* === ФИОЛЕТОВАЯ ТЕМА === */
+body.purple-theme {
+  --bg-primary: #2e1065;
+  --bg-secondary: #4c1d95;
+  --bg-card: #4c1d95;
+  --text-primary: #f3e8ff;
+  --text-secondary: #d8b4fe;
+  --accent: #a855f7;
+  --accent-secondary: #c084fc;
+  --border: #7c3aed;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #f87171;
+  --shadow: rgba(168, 85, 247, 0.2);
+}
+
+/* === ПРИМЕНЕНИЕ ПЕРЕМЕННЫХ === */
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+
+header {
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  box-shadow: 0 4px 20px var(--shadow);
+}
+
+.nav-btn {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 2px solid var(--border);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-btn.active {
+  background: var(--accent);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.nav-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+/* Карточки */
+.entry-card, .note-card, .stats-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px var(--shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.entry-card:hover, .note-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px var(--shadow);
+}
+
+/* Кнопки */
+.add-btn-fixed {
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  box-shadow: 0 4px 20px var(--shadow);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Модальные окна */
+.modal-content {
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 10px 40px var(--shadow);
+}
+
+/* Поля ввода */
+input, select, textarea {
+  background: var(--bg-secondary);
+  border: 2px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 12px;
+  transition: all 0.3s;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.1);
+  outline: none;
+}
+
+/* Календарь */
+.day-cell {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.day-cell:hover {
+  transform: scale(1.1);
+  background: var(--accent);
+  color: white;
+}
+
+.day-cell.today {
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+/* Статусы */
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-new { background: var(--warning); color: white; }
+.status-confirmed { background: var(--accent); color: white; }
+.status-done { background: var(--success); color: white; }
+.status-cancelled { background: var(--error); color: white; }
+
+/* Утренний брифинг */
+#morningBriefing {
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  border-radius: 20px;
+  padding: 20px;
+  color: white;
+  box-shadow: 0 8px 24px var(--shadow);
+  animation: slideIn 0.5s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Переключатель тем */
+.theme-toggle {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.theme-toggle:hover {
+  transform: rotate(180deg) scale(1.1);
+}
+
+/* Скроллбар */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-secondary);
+}
