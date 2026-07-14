@@ -1,0 +1,1611 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #fef9f9;
+  color: #333;
+  padding-bottom: 100px;
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+header {
+  background: linear-gradient(135deg, #ff6b9d, #ff8e53);
+  color: white;
+  padding: 20px 15px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 4px 15px rgba(255,107,157,0.3);
+}
+
+header h1 {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+
+nav {
+  display: flex;
+  gap: 6px;
+}
+
+.nav-btn {
+  flex: 1;
+  padding: 10px 5px;
+  border: none;
+  background: rgba(255,255,255,0.25);
+  color: white;
+  border-radius: 15px;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nav-btn.active {
+  background: white;
+  transform: scale(1.05);
+}
+
+main {
+  padding: 15px;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.tab-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.tab-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.tab-action-btn {
+  padding: 8px 15px;
+  background: white;
+  border: 2px solid #ff6b9d;
+  color: #ff6b9d;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Календарь */
+.calendar-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  background: white;
+  padding: 12px;
+  border-radius: 15px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.calendar-controls button {
+  background: #ff6b9d;
+  border: none;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.calendar-controls h2 {
+  font-size: 16px;
+  flex: 1;
+  text-align: center;
+}
+
+.small-btn {
+  font-size: 12px !important;
+  padding: 6px 12px !important;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  background: white;
+  padding: 10px;
+  border-radius: 15px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.day-header {
+  text-align: center;
+  font-size: 10px;
+  color: #666;
+  padding: 5px 2px;
+  font-weight: bold;
+}
+
+.day-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  position: relative;
+  background: #fafafa;
+  border: 2px solid transparent;
+}
+
+.day-cell.today {
+  background: linear-gradient(135deg, #ff6b9d, #ff8e53);
+  color: white;
+  font-weight: bold;
+}
+
+.day-cell.selected {
+  border-color: #ff6b9d;
+  background: #ffe0ec;
+}
+
+.day-cell.has-work {
+  border-left: 3px solid #ff6b9d;
+}
+
+.day-cell.has-family {
+  border-left: 3px solid #4a90e2;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+  font-size: 11px;
+  color: #666;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.legend-color.work {
+  background: #ff6b9d;
+}
+
+.legend-color.family {
+  background: #4a90e2;
+}
+
+.legend-color.note {
+  background: #7ed321;
+}
+
+/* Карточки записей */
+.entry-card {
+  background: white;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border-left: 4px solid #ff6b9d;
+  cursor: pointer;
+}
+
+.entry-card.category-family {
+  border-left-color: #4a90e2;
+}
+
+.entry-card.category-dog {
+  border-left-color: #f5a623;
+}
+
+.entry-card.status-done {
+  opacity: 0.7;
+}
+
+.entry-card.status-cancelled {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.entry-compact-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.entry-compact-time {
+  font-weight: bold;
+  font-size: 14px;
+  white-space: nowrap;
+  color: #ff6b9d;
+}
+
+.entry-card.category-family .entry-compact-time {
+  color: #4a90e2;
+}
+
+.entry-compact-name {
+  font-weight: 600;
+  font-size: 14px;
+  flex: 1;
+}
+
+.entry-compact-price {
+  font-weight: bold;
+  font-size: 14px;
+  color: #333;
+}
+
+.expand-icon {
+  color: #999;
+  font-size: 12px;
+  transition: transform 0.3s;
+}
+
+.entry-card.expanded .expand-icon {
+  transform: rotate(180deg);
+}
+
+.entry-card.compact .entry-details,
+.entry-card.compact .status-buttons,
+.entry-card.compact .entry-actions {
+  display: none;
+}
+
+.entry-card.expanded .entry-details,
+.entry-card.expanded .status-buttons,
+.entry-card.expanded .entry-actions {
+  display: block;
+  animation: slideDown 0.3s;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 500px; }
+}
+
+.entry-details {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e0e0e0;
+  font-size: 13px;
+  color: #666;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: bold;
+  margin-left: 5px;
+}
+
+.status-new {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-confirmed {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.status-done {
+  background: #e8f5e9;
+  color: #388e3c;
+}
+
+.status-cancelled {
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+.status-buttons,
+.entry-actions {
+  display: flex;
+  gap: 5px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.status-btn,
+.entry-actions button {
+  flex: 1;
+  min-width: 80px;
+  padding: 8px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 12px;
+  background: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.status-btn.active {
+  background: #ff6b9d;
+  color: white;
+  border-color: #ff6b9d;
+}
+
+.btn-edit {
+  background: #e3f2fd !important;
+  color: #1976d2 !important;
+}
+
+.btn-dup {
+  background: #fff3e0 !important;
+  color: #f57c00 !important;
+}
+
+.btn-del {
+  background: #ffebee !important;
+  color: #d32f2f !important;
+}
+
+/* Кнопка добавления */
+.add-btn-fixed {
+  position: fixed;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #ff6b9d, #ff8e53);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(255,107,157,0.5);
+  z-index: 999;
+}
+
+/* Модальные окна */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  background: white;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  border-radius: 20px 20px 0 0;
+  padding: 20px;
+  overflow-y: auto;
+  position: relative;
+}
+
+.close-modal {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 28px;
+  cursor: pointer;
+  color: #666;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #f0f0f0;
+}
+
+.modal-content h3 {
+  margin-bottom: 15px;
+  font-size: 20px;
+  padding-right: 35px;
+}
+
+.modal-content label {
+  display: block;
+  margin: 12px 0 5px;
+  font-size: 13px;
+  color: #666;
+  font-weight: 600;
+}
+
+.modal-content input,
+.modal-content select,
+.modal-content textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.duration-row {
+  display: flex;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.duration-btn {
+  flex: 1;
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.duration-btn.active {
+  background: #ff6b9d;
+  color: white;
+  border-color: #ff6b9d;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.save-btn {
+  flex: 2;
+  padding: 14px;
+  background: #ff6b9d;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  flex: 1;
+  padding: 14px;
+  background: #e0e0e0;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* Быстрое добавление */
+.quick-add-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.quick-add-btn {
+  padding: 20px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 15px;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.quick-add-btn:active {
+  transform: scale(0.95);
+}
+
+.quick-add-btn.work {
+  border-color: #ff6b9d;
+}
+
+.quick-add-btn.family {
+  border-color: #4a90e2;
+}
+
+.quick-add-btn.dog {
+  border-color: #f5a623;
+}
+
+.quick-add-btn.note {
+  border-color: #7ed321;
+}
+
+.quick-add-icon {
+  font-size: 32px;
+}
+
+.quick-add-btn span:last-child {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* Фильтры */
+.filter-bar,
+.family-filters,
+.note-filters {
+  margin-bottom: 15px;
+}
+
+.filter-bar select {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 14px;
+  background: white;
+}
+
+.family-filters,
+.note-filters {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.family-filter,
+.note-filter {
+  padding: 8px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 20px;
+  background: white;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.family-filter.active,
+.note-filter.active {
+  background: #ff6b9d;
+  color: white;
+  border-color: #ff6b9d;
+}
+
+/* Заметки */
+.note-card {
+  background: white;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border-left: 4px solid #7ed321;
+}
+
+.note-card.important {
+  border-left-color: #f5a623;
+  background: #fff9e6;
+}
+
+.note-card.shopping {
+  border-left-color: #4a90e2;
+}
+
+.note-card.ideas {
+  border-left-color: #9b59b6;
+}
+
+.note-title {
+  font-weight: bold;
+  font-size: 15px;
+  margin-bottom: 5px;
+}
+
+.note-text {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+}
+
+.note-meta {
+  font-size: 11px;
+  color: #999;
+  display: flex;
+  justify-content: space-between;
+}
+
+.note-actions {
+  display: flex;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.note-actions button {
+  flex: 1;
+  padding: 6px;
+  border: none;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* Прайс */
+.price-item {
+  background: #fafafa;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.price-item-info {
+  flex: 1;
+}
+
+.price-item-name {
+  font-weight: 600;
+}
+
+.price-item-details {
+  font-size: 12px;
+  color: #666;
+}
+
+.price-item-price {
+  font-weight: bold;
+  color: #ff6b9d;
+  margin-right: 10px;
+}
+
+/* Члены семьи */
+.family-member {
+  background: #fafafa;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 10px;
+}
+
+.family-member-name {
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.family-member-info {
+  font-size: 13px;
+  color: #666;
+  margin-top: 3px;
+}
+
+/* Статистика */
+.stats-box {
+  background: white;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.stat-row:last-child {
+  border: none;
+}
+
+.stats-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 12px;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+h2 {
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 20px;
+}
+
+/* === УВЕДОМЛЕНИЯ === */
+#notificationContainer {
+  position: fixed;
+  top: 80px;
+  right: 10px;
+  z-index: 10000;
+  max-width: 350px;
+}
+
+.in-app-notification {
+  background: white;
+  border-left: 4px solid #ff6b9d;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-title {
+  font-weight: bold;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.notification-message {
+  font-size: 13px;
+  color: #666;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+  padding: 0 5px;
+  margin-left: 10px;
+}
+
+.notification-close:hover {
+  color: #333;
+}
+
+/* Индикатор скорого события */
+.entry-card.soon {
+  border-left-color: #ff9800;
+  background: #fff8e1;
+}
+
+.entry-card.soon .entry-compact-time {
+  color: #ff9800;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Утренний брифинг */
+.morning-briefing {
+  background: linear-gradient(135deg, #fff9f9, #ffe0ec);
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  border: 2px solid #ff6b9d;
+}
+
+.briefing-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #ff6b9d;
+  margin-bottom: 10px;
+}
+
+.briefing-stats {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.briefing-stat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+}
+
+.briefing-stat-icon {
+  font-size: 20px;
+}
+
+/* === ТЁМНАЯ ТЕМА === */
+body.dark-theme {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  color: #eaeaea;
+}
+
+body.dark-theme header {
+  background: linear-gradient(135deg, #2d3561, #3a4a7a);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+body.dark-theme .nav-btn {
+  background: rgba(255,255,255,0.1);
+}
+
+body.dark-theme .nav-btn.active {
+  background: #ff6b9d;
+  color: white;
+}
+
+body.dark-theme .tab-header h2,
+body.dark-theme h1,
+body.dark-theme h2,
+body.dark-theme h3 {
+  color: #eaeaea;
+}
+
+body.dark-theme .calendar-controls,
+body.dark-theme .calendar-grid,
+body.dark-theme .filter-bar select,
+body.dark-theme .stats-box,
+body.dark-theme .entry-card,
+body.dark-theme .note-card,
+body.dark-theme .client-card,
+body.dark-theme .price-item,
+body.dark-theme .family-member,
+body.dark-theme .modal-content,
+body.dark-theme .test-section {
+  background: #16213e;
+  color: #eaeaea;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+body.dark-theme .day-cell {
+  background: #2d3561;
+  color: #eaeaea;
+}
+
+body.dark-theme .day-cell.other-month {
+  color: #555;
+}
+
+body.dark-theme .day-header {
+  color: #888;
+}
+
+body.dark-theme .entry-compact-name,
+body.dark-theme .entry-compact-price,
+body.dark-theme .client-name,
+body.dark-theme .price-item-name {
+  color: #eaeaea;
+}
+
+body.dark-theme .entry-details,
+body.dark-theme .client-info,
+body.dark-theme .price-item-details,
+body.dark-theme .family-member-info,
+body.dark-theme .note-text {
+  color: #aaa;
+}
+
+body.dark-theme input,
+body.dark-theme select,
+body.dark-theme textarea {
+  background: #2d3561;
+  color: #eaeaea;
+  border-color: #3a4a7a;
+}
+
+body.dark-theme .duration-btn,
+body.dark-theme .status-btn,
+body.dark-theme .family-filter,
+body.dark-theme .note-filter {
+  background: #2d3561;
+  color: #eaeaea;
+  border-color: #3a4a7a;
+}
+
+body.dark-theme .quick-add-btn {
+  background: #2d3561;
+  border-color: #3a4a7a;
+  color: #eaeaea;
+}
+
+body.dark-theme .action-btn,
+body.dark-theme .cancel-btn {
+  background: #2d3561;
+  color: #eaeaea;
+  border-color: #3a4a7a;
+}
+
+body.dark-theme .legend-item {
+  color: #aaa;
+}
+
+body.dark-theme .empty-state {
+  color: #888;
+}
+
+body.dark-theme .result {
+  background: #2d3561;
+}
+
+/* Кнопка переключения темы */
+.theme-toggle {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  background: rgba(255,255,255,0.2);
+  border: none;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle:hover {
+  background: rgba(255,255,255,0.3);
+  transform: scale(1.1);
+}
+
+.theme-toggle:active {
+  transform: scale(0.95);
+}
+
+/* Анимация переключения */
+body.theme-transition,
+body.theme-transition * {
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
+}
+
+/* === ТЁМНАЯ ТЕМА === */
+body.dark-theme {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  color: #eaeaea;
+}
+
+body.dark-theme header {
+  background: linear-gradient(135deg, #2d3561, #3a4a7a);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+body.dark-theme .nav-btn {
+  background: rgba(255,255,255,0.1);
+}
+
+body.dark-theme .nav-btn.active {
+  background: #ff6b9d;
+  color: white;
+}
+
+body.dark-theme .tab-header h2,
+body.dark-theme h1,
+body.dark-theme h2,
+body.dark-theme h3 {
+  color: #eaeaea;
+}
+
+body.dark-theme .calendar-controls,
+body.dark-theme .calendar-grid,
+body.dark-theme .filter-bar select,
+body.dark-theme .stats-box,
+body.dark-theme .entry-card,
+body.dark-theme .note-card,
+body.dark-theme .client-card,
+body.dark-theme .price-item,
+body.dark-theme .family-member,
+body.dark-theme .modal-content,
+body.dark-theme .test-section {
+  background: #16213e;
+  color: #eaeaea;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+body.dark-theme .day-cell {
+  background: #2d3561;
+  color: #eaeaea;
+}
+
+body.dark-theme .day-cell.other-month {
+  color: #555;
+}
+
+body.dark-theme .day-header {
+  color: #888;
+}
+
+body.dark-theme .entry-compact-name,
+body.dark-theme .entry-compact-price,
+body.dark-theme .client-name,
+body.dark-theme .price-item-name {
+  color: #eaeaea;
+}
+
+body.dark-theme .entry-details,
+body.dark-theme .client-info,
+body.dark-theme .price-item-details,
+body.dark-theme .family-member-info,
+body.dark-theme .note-text {
+  color: #aaa;
+}
+
+body.dark-theme input,
+body.dark-theme select,
+body.dark-theme textarea {
+  background: #2d3561;
+  color: #eaeaea;
+  border-color: #3a4a7a;
+}
+
+body.dark-theme .duration-btn,
+body.dark-theme .status-btn,
+body.dark-theme .family-filter,
+body.dark-theme .note-filter {
+  background: #2d3561;
+  color: #eaeaea;
+  border-color: #3a4a7a;
+}
+
+body.dark-theme .quick-add-btn {
+  background: #2d3561;
+  border-color: #3a4a7a;
+  color: #eaeaea;
+}
+
+body.dark-theme .action-btn,
+body.dark-theme .cancel-btn {
+  background: #2d3561;
+  color: #eaeaea;
+  border-color: #3a4a7a;
+}
+
+body.dark-theme .legend-item {
+  color: #aaa;
+}
+
+body.dark-theme .empty-state {
+  color: #888;
+}
+
+body.dark-theme .result {
+  background: #2d3561;
+}
+
+/* Кнопка переключения темы */
+.theme-toggle {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  background: rgba(255,255,255,0.2);
+  border: none;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle:hover {
+  background: rgba(255,255,255,0.3);
+  transform: scale(1.1);
+}
+
+.theme-toggle:active {
+  transform: scale(0.95);
+}
+
+/* Анимация переключения */
+body.theme-transition,
+body.theme-transition * {
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
+}
+
+/* === СЕМЕЙНЫЕ ЗАДАЧИ === */
+.task-card {
+  background: white;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border-left: 4px solid #4a90e2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+body.dark-theme .task-card {
+  background: #16213e;
+}
+
+.task-card.completed {
+  opacity: 0.6;
+  border-left-color: #9e9e9e;
+}
+
+.task-card.completed .task-text {
+  text-decoration: line-through;
+}
+
+.task-checkbox {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #4a90e2;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: white;
+  font-size: 16px;
+  color: #4a90e2;
+}
+
+body.dark-theme .task-checkbox {
+  background: #2d3561;
+}
+
+.task-checkbox.checked {
+  background: #4a90e2;
+  color: white;
+}
+
+.task-text {
+  flex: 1;
+  font-size: 15px;
+  color: #333;
+}
+
+body.dark-theme .task-text {
+  color: #eaeaea;
+}
+
+.task-category {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: #f0f0f0;
+  color: #666;
+}
+
+body.dark-theme .task-category {
+  background: #2d3561;
+  color: #aaa;
+}
+
+.task-delete {
+  background: none;
+  border: none;
+  color: #f44336;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 5px;
+}
+
+.task-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.task-filter {
+  padding: 8px 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 20px;
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+body.dark-theme .task-filter {
+  background: #2d3561;
+  border-color: #3a4a7a;
+  color: #eaeaea;
+}
+
+.task-filter.active {
+  background: #4a90e2;
+  color: white;
+  border-color: #4a90e2;
+}
+
+/* === PIN НАСТРОЙКИ === */
+.pin-section {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+body.dark-theme .pin-section {
+  background: #16213e;
+}
+
+.pin-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.pin-status-text {
+  font-size: 14px;
+  color: #666;
+}
+
+body.dark-theme .pin-status-text {
+  color: #aaa;
+}
+
+.pin-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 20px;
+  text-align: center;
+  letter-spacing: 8px;
+  margin-bottom: 10px;
+}
+
+body.dark-theme .pin-input {
+  background: #2d3561;
+  border-color: #3a4a7a;
+  color: #eaeaea;
+}
+
+/* === ЭКРАН ВВОДА PIN === */
+.pin-screen {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.95);
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.pin-screen-content {
+  background: white;
+  padding: 30px;
+  border-radius: 20px;
+  text-align: center;
+  max-width: 350px;
+  width: 100%;
+}
+
+body.dark-theme .pin-screen-content {
+  background: #16213e;
+  color: #eaeaea;
+}
+
+.pin-screen-title {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: #ff6b9d;
+}
+
+.pin-screen-input {
+  width: 100%;
+  padding: 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 24px;
+  text-align: center;
+  letter-spacing: 10px;
+  margin-bottom: 15px;
+}
+
+body.dark-theme .pin-screen-input {
+  background: #2d3561;
+  border-color: #3a4a7a;
+  color: #eaeaea;
+}
+
+.pin-screen-error {
+  color: #f44336;
+  font-size: 14px;
+  margin-bottom: 10px;
+  min-height: 20px;
+}
+
+/* === КНОПКА ПОДЕЛИТЬСЯ === */
+.share-btn {
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.share-btn:active {
+  transform: scale(0.95);
+}
+
+/* === ШАБЛОНЫ === */
+.template-selector {
+  margin-bottom: 15px;
+  padding: 12px;
+  background: #fff3e0;
+  border-radius: 10px;
+  border: 2px dashed #ff9800;
+}
+
+body.dark-theme .template-selector {
+  background: #2d3561;
+  border-color: #ff9800;
+}
+
+.template-selector label {
+  font-weight: bold;
+  color: #e65100;
+  margin-bottom: 5px;
+  display: block;
+}
+
+body.dark-theme .template-selector label {
+  color: #ff9800;
+}
+
+.template-select {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #ff9800;
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+body.dark-theme .template-select {
+  background: #16213e;
+  color: #eaeaea;
+}
+
+.save-as-template {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 15px;
+  padding: 10px;
+  background: #e8f5e9;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+body.dark-theme .save-as-template {
+  background: #1b5e20;
+}
+
+.save-as-template input {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.save-as-template span {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2e7d32;
+}
+
+body.dark-theme .save-as-template span {
+  color: #a5d6a7;
+}
+
+.template-manager {
+  margin-top: 15px;
+}
+
+.template-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+body.dark-theme .template-item {
+  background: #2d3561;
+}
+
+.template-item-info {
+  flex: 1;
+}
+
+.template-item-name {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.template-item-details {
+  font-size: 12px;
+  color: #666;
+}
+
+body.dark-theme .template-item-details {
+  color: #aaa;
+}
+
+/* Улучшенная видимость кнопки закрытия модалки */
+.close-modal {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 32px;
+  font-weight: bold;
+  color: #666;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.1);
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.close-modal:hover {
+  background: rgba(0,0,0,0.2);
+  color: #000;
+  transform: scale(1.1);
+}
+
+.close-modal:active {
+  transform: scale(0.95);
+}
+
+/* Для тёмной темы */
+body.dark-theme .close-modal {
+  background: rgba(255,255,255,0.2);
+  color: white;
+}
+
+body.dark-theme .close-modal:hover {
+  background: rgba(255,255,255,0.3);
+  color: white;
+}
+
+/* Улучшенная кнопка закрытия */
+.close-modal {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 32px;
+  font-weight: bold;
+  color: #666;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.1);
+  transition: all 0.2s;
+  z-index: 1000;
+}
+
+.close-modal:hover {
+  background: rgba(0,0,0,0.2);
+  color: #000;
+  transform: scale(1.1);
+}
+
+body.dark-theme .close-modal {
+  background: rgba(255,255,255,0.2);
+  color: white;
+}
+
+body.dark-theme .close-modal:hover {
+  background: rgba(255,255,255,0.3);
+  color: white;
+}
+
+/* Анимация переходов */
+.theme-transition, .theme-transition * {
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
+}
+
+/* КНОПКА ТЕМЫ */
+.theme-toggle {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  background: rgba(255,255,255,0.2);
+  border: none;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.theme-toggle:hover {
+  background: rgba(255,255,255,0.3);
+  transform: scale(1.1);
+}
+
+.theme-toggle:active {
+  transform: scale(0.95);
+}

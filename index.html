@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#ff6b9d">
+  <title>ГдеСвета - Семейный ежедневник</title>
+  <link rel="stylesheet" href="styles/main.css?v=4">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>📅 ГдеСвета</h1>
+      <button class="theme-toggle" id="themeToggle" title="Переключить тему">🌙</button>
+      <nav>
+        <button class="nav-btn active" data-tab="calendar">📅</button>
+        <button class="nav-btn" data-tab="work">💼</button>
+        <button class="nav-btn" data-tab="family">👨‍👩‍</button>
+        <button class="nav-btn" data-tab="tasks">✅</button>
+        <button class="nav-btn" data-tab="notes">📝</button>
+        <button class="nav-btn" data-tab="stats">📊</button>
+      </nav>
+    </header>
+
+    <main>
+      <div id="tab-calendar" class="tab-content active">
+        <div id="calendarView"></div>
+      </div>
+
+      <div id="tab-work" class="tab-content">
+        <div class="tab-header">
+          <h2>💼 Работа</h2>
+          <button class="tab-action-btn" onclick="showPriceList()">💰 Прайс</button>
+        </div>
+        <div id="workView"></div>
+      </div>
+
+      <div id="tab-family" class="tab-content">
+        <div class="tab-header">
+          <h2>👨‍👩‍ Семья</h2>
+          <button class="tab-action-btn" onclick="showFamilyMembers()">👥 Семья</button>
+        </div>
+        <div id="familyView"></div>
+      </div>
+
+      <div id="tab-tasks" class="tab-content">
+        <div class="tab-header">
+          <h2>✅ Семейные задачи</h2>
+          <button class="tab-action-btn" onclick="openTaskForm()">+ Задача</button>
+        </div>
+        <div id="tasksView"></div>
+      </div>
+
+      <div id="tab-notes" class="tab-content">
+        <div class="tab-header">
+          <h2>📝 Заметки</h2>
+          <button class="tab-action-btn" onclick="openNoteForm()">+ Новая</button>
+        </div>
+        <div id="notesView"></div>
+      </div>
+
+      <div id="tab-stats" class="tab-content">
+        <h2>📊 Статистика</h2>
+        <div id="statsView"></div>
+        <div class="stats-actions">
+          <button onclick="clearAllData()" style="background:#ffebee;color:#d32f2f;margin-right:5px;">🗑️ Очистить</button>
+          <button id="exportBtn" class="action-btn">💾 Экспорт</button>
+          <button id="importBtn" class="action-btn">📂 Импорт</button>
+          <button id="pinBtn" class="action-btn" onclick="openPinSettings()"> PIN</button>
+          <input type="file" id="importFile" accept=".json" style="display:none">
+        </div>
+      </div>
+    </main>
+
+    <button class="add-btn-fixed" onclick="openQuickAdd()">+ Добавить</button>
+  </div>
+
+  <div id="notificationContainer"></div>
+  <div id="modalContainer"></div>
+
+  <!-- ЯДРО -->
+  <script src="src/core/storage.js?v=4"></script>
+  <script src="src/core/events.js?v=4"></script>
+  <script src="src/core/utils.js?v=4"></script>
+  <script src="src/core/store.js?v=4"></script>
+  
+  <!-- МОДЕЛИ -->
+  <script src="src/models/Entry.js?v=4"></script>
+  <script src="src/models/Note.js?v=4"></script>
+  <script src="src/models/PriceItem.js?v=4"></script>
+  <script src="src/models/FamilyMember.js?v=4"></script>
+  
+  <!-- СЕРВИСЫ -->
+  <script src="src/services/EntryService.js?v=4"></script>
+  <script src="src/services/NoteService.js?v=4"></script>
+  <script src="src/services/PriceService.js?v=4"></script>
+  <script src="src/services/FamilyService.js?v=4"></script>
+  <script src="src/services/ConflictChecker.js?v=4"></script>
+  <script src="src/services/NotificationService.js?v=4"></script>
+  <script src="src/services/FamilyShare.js?v=4"></script>
+  <script src="src/services/TemplateService.js?v=4"></script>
+  
+  <!-- UI КОМПОНЕНТЫ -->
+  <script src="src/ui/components/Modal.js?v=4"></script>
+  <script src="src/ui/components/Calendar.js?v=4"></script>
+  <script src="src/ui/components/EntryCard.js?v=4"></script>
+  <script src="src/ui/components/NoteCard.js?v=4"></script>
+  <script src="src/ui/components/FamilySelect.js?v=4"></script>
+  
+  <!-- VIEWS -->
+  <script src="src/views/CalendarView.js?v=4"></script>
+  <script src="src/views/WorkView.js?v=4"></script>
+  <script src="src/views/FamilyView.js?v=4"></script>
+  <script src="src/views/NotesView.js?v=4"></script>
+  <script src="src/views/StatsView.js?v=4"></script>
+  <script src="src/views/TasksView.js?v=4"></script>
+  
+  <!-- ГЛАВНАЯ ЛОГИКА -->
+  <script src="app.js?v=4"></script>
+  
+  <!-- ГЛОБАЛЬНЫЕ ФУНКЦИИ (ЗАГРУЖАЕТСЯ ПОСЛЕДНИМ!) -->
+  <script src="src/globals.js?v=4"></script>
+</body>
+</html>

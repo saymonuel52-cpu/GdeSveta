@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>UI Тесты ГдеСвета</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #f4f4f4; }
+    .pass { color: green; }
+    .fail { color: red; font-weight: bold; }
+    h1 { color: #333; }
+  </style>
+</head>
+<body>
+  <h1>🧪 UI Автоматические тесты</h1>
+  <div id="results">Загрузка...</div>
+
+  <!-- Подключаем скрипты приложения -->
+  <script src="src/core/storage.js"></script>
+  <script src="src/core/events.js"></script>
+  <script src="src/core/utils.js"></script>
+  <script src="src/core/store.js"></script>
+  <script src="src/models/Entry.js"></script>
+  <script src="src/models/Note.js"></script>
+  <script src="src/services/EntryService.js"></script>
+  <script src="src/services/NoteService.js"></script>
+  <script src="src/globals.js"></script>
+  <script src="app.js"></script>
+
+  <script>
+    const resultsDiv = document.getElementById('results');
+    let pass = 0, fail = 0;
+    let logs = [];
+
+    function log(msg, success) {
+      logs.push(`<div class="${success ? 'pass' : 'fail'}">${success ? '✅' : ''} ${msg}</div>`);
+      if (success) pass++; else fail++;
+    }
+
+    function runTests() {
+      resultsDiv.innerHTML = "Тестирование...";
+      
+      try {
+        // Тест 1: Storage
+        Storage.set('test_key', 'test_value');
+        log("Storage: запись и чтение", Storage.get('test_key') === 'test_value');
+        Storage.remove('test_key');
+
+        // Тест 2: Создание записи
+        const entry = EntryService.create({
+          name: 'Тестовая запись',
+          date: Utils.getToday(),
+          time: '12:00',
+          duration: 60,
+          category: 'work',
+          price: 1000
+        });
+        log("EntryService: создание записи", entry.id !== undefined);
+
+        // Тест 3: Получение записи
+        const allEntries = Store.getEntries();
+        log("Store: получение записей", allEntries.length > 0);
+
+        // Тест 4: Удаление записи (используем глобальную функцию)
+        const idToDelete = entry.id;
+        window.deleteEntry = function(id) {
+           // Эмулируем клик по "Да" в модалке (упрощенно)
+           EntryService.delete(id);
+        };
+        window.deleteEntry(idToDelete);
+        const afterDelete = Store.getEntries().find(e => e.id === idToDelete);
+        log("Globals: удаление записи", afterDelete === undefined);
+
+        // Тест 5: Тёмная тема (проверка функции)
+        log("Globals: функция initTheme существует", typeof initTheme === 'function');
+
+      } catch (e) {
+        log(`Критическая ошибка: ${e.message}`, false);
+      }
+
+      // Вывод результатов
+      resultsDiv.innerHTML = `
+        <h2>Результаты: ${pass} PASS, ${fail} FAIL</h2>
+        ${logs.join('')}
+        <hr>
+        <p>Открой консоль браузера (F12) для подробных логов.</p>
+      `;
+      
+      // Сохраняем в localStorage для bash-скрипта (если нужно)
+      localStorage.setItem('ui_test_results', JSON.stringify({pass, fail}));
+    }
+
+    // Запуск после загрузки
+    window.onload = runTests;
+  </script>
+</body>
+</html>

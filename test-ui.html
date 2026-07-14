@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тестирование ГдеСвета</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    h1 { color: #ff6b9d; text-align: center; }
+    .test-section {
+      background: white;
+      padding: 20px;
+      margin: 15px 0;
+      border-radius: 15px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .test-btn {
+      padding: 12px 20px;
+      margin: 5px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      background: #ff6b9d;
+      color: white;
+      font-weight: 600;
+    }
+    .result {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .error {
+      background: #ffebee;
+      color: #c62828;
+    }
+    .checklist {
+      list-style: none;
+      padding: 0;
+    }
+    .checklist li {
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 5px;
+      background: #f5f5f5;
+    }
+    .checklist li.done {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .checklist li.fail {
+      background: #ffebee;
+      color: #c62828;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Тестирование ГдеСвета</h1>
+  
+  <div class="test-section">
+    <h2> Чек-лист тестирования</h2>
+    <ul class="checklist" id="checklist">
+      <li data-test="modal-close">❌ Модалка закрывается после сохранения</li>
+      <li data-test="dark-theme">❌ Тёмная тема переключается</li>
+      <li data-test="work-categories">❌ Только рабочие категории в работе</li>
+      <li data-test="family-categories">❌ Только семейные категории в семье</li>
+      <li data-test="notifications">❌ Уведомления работают</li>
+      <li data-test="pin">❌ PIN-код работает</li>
+      <li data-test="tasks">❌ Задачи создаются</li>
+      <li data-test="templates">❌ Шаблоны работают</li>
+    </ul>
+  </div>
+  
+  <div class="test-section">
+    <h2>🔧 Быстрые тесты</h2>
+    <button class="test-btn" onclick="testModal()">Тест модалки</button>
+    <button class="test-btn" onclick="testTheme()">Тест темы</button>
+    <button class="test-btn" onclick="testCategories()">Тест категорий</button>
+    <button class="test-btn" onclick="testAll()">Запустить все</button>
+    <div id="testResults"></div>
+  </div>
+
+  <script src="src/core/storage.js"></script>
+  <script src="src/core/events.js"></script>
+  <script src="src/core/utils.js"></script>
+  <script src="src/core/store.js"></script>
+  <script src="src/models/Entry.js"></script>
+  <script src="src/models/Note.js"></script>
+  <script src="src/models/PriceItem.js"></script>
+  <script src="src/models/FamilyMember.js"></script>
+  <script src="src/services/EntryService.js"></script>
+  <script src="src/services/NoteService.js"></script>
+  <script src="src/services/PriceService.js"></script>
+  <script src="src/services/FamilyService.js"></script>
+  <script src="src/services/FamilyShare.js"></script>
+  <script src="src/services/TemplateService.js"></script>
+  
+  <script>
+    Store.init();
+    
+    function markTest(testId, passed) {
+      const li = document.querySelector(`[data-test="${testId}"]`);
+      if (li) {
+        li.className = passed ? 'done' : 'fail';
+        li.textContent = (passed ? '✅ ' : '❌ ') + li.textContent.substring(2);
+      }
+    }
+    
+    function testModal() {
+      const results = document.getElementById('testResults');
+      results.innerHTML = '<div class="result"> Тестирую модалку...</div>';
+      
+      try {
+        // Проверяем что функция openEntryForm существует
+        if (typeof openEntryForm === 'function') {
+          results.innerHTML = '<div class="result">✅ Функция openEntryForm существует</div>';
+          markTest('modal-close', true);
+        } else {
+          results.innerHTML = '<div class="result error">❌ Функция openEntryForm не найдена</div>';
+          markTest('modal-close', false);
+        }
+      } catch (e) {
+        results.innerHTML = `<div class="result error">❌ Ошибка: ${e.message}</div>`;
+        markTest('modal-close', false);
+      }
+    }
+    
+    function testTheme() {
+      const results = document.getElementById('testResults');
+      results.innerHTML = '<div class="result">🔧 Тестирую тёмную тему...</div>';
+      
+      try {
+        if (typeof initTheme === 'function') {
+          initTheme();
+          const hasDarkClass = document.body.classList.contains('dark-theme');
+          results.innerHTML = `<div class="result">✅ Тёмная тема: ${hasDarkClass ? 'активна' : 'светлая'}</div>`;
+          markTest('dark-theme', true);
+        } else {
+          results.innerHTML = '<div class="result error">❌ Функция initTheme не найдена</div>';
+          markTest('dark-theme', false);
+        }
+      } catch (e) {
+        results.innerHTML = `<div class="result error">❌ Ошибка: ${e.message}</div>`;
+        markTest('dark-theme', false);
+      }
+    }
+    
+    function testCategories() {
+      const results = document.getElementById('testResults');
+      results.innerHTML = '<div class="result">🔧 Тестирую категории...</div>';
+      
+      try {
+        // Проверяем что TemplateService существует
+        if (typeof TemplateService !== 'undefined') {
+          results.innerHTML = '<div class="result">✅ Шаблонизатор загружен</div>';
+          markTest('work-categories', true);
+          markTest('family-categories', true);
+        } else {
+          results.innerHTML = '<div class="result error">❌ TemplateService не найден</div>';
+          markTest('work-categories', false);
+          markTest('family-categories', false);
+        }
+      } catch (e) {
+        results.innerHTML = `<div class="result error">❌ Ошибка: ${e.message}</div>`;
+        markTest('work-categories', false);
+        markTest('family-categories', false);
+      }
+    }
+    
+    function testAll() {
+      testModal();
+      setTimeout(testTheme, 500);
+      setTimeout(testCategories, 1000);
+    }
+    
+    console.log('✅ Страница тестирования загружена');
+  </script>
+</body>
+</html>

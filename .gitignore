@@ -1,0 +1,10 @@
+node_modules/
+android/
+www/
+package-lock.json
+logs/
+*.log
+*.apk
+*.zip
+.DS_Store
+Thumbs.db

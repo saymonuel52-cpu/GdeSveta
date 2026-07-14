@@ -1,0 +1,31 @@
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#f0f2f5; height:100vh; overflow:hidden; position:relative; }
+#app { max-width:480px; margin:0 auto; background:white; height:100vh; display:flex; flex-direction:column; }
+header { background:#6C63FF; color:white; padding:14px 18px; display:flex; justify-content:space-between; }
+nav { display:flex; background:#f8f9fc; border-bottom:1px solid #ddd; }
+nav button { flex:1; padding:10px; border:none; background:transparent; font-size:15px; }
+nav button.active { color:#6C63FF; border-bottom:2px solid #6C63FF; }
+#main { flex:1; padding:16px; overflow-y:auto; }
+/* Кнопка фиксирована */
+.add-btn-fixed {
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 90% !important;
+    max-width: 440px !important;
+    padding: 16px !important;
+    background: #6C63FF !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 50px !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+    box-shadow: 0 8px 25px rgba(108,99,255,0.5) !important;
+    z-index: 9999 !important;
+    cursor: pointer !important;
+    text-align: center !important;
+}
+.add-btn-fixed:active {
+    transform: translateX(-50%) scale(0.95) !important;
+}

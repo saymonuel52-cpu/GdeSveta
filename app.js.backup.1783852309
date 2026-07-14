@@ -1,0 +1,70 @@
+// Простейший скрипт для проверки кнопки
+document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('addAppBtnFixed');
+    if (btn) {
+        btn.addEventListener('click', function() {
+            alert('Кнопка работает!');
+        });
+    } else {
+        alert('Кнопка не найдена в DOM!');
+    }
+});
+
+// === АВТОМАТИЧЕСКИЙ ОБРАБОТЧИК КНОПКИ ===
+document.addEventListener('DOMContentLoaded', () => {
+  const addBtn = document.getElementById('addAppBtnFixed');
+  if (addBtn) {
+    addBtn.addEventListener('click', () => {
+      // Ищем функцию открытия модалки
+      if (typeof openAddModal === 'function') {
+        openAddModal();
+      } else if (typeof showModal === 'function') {
+        showModal();
+      } else if (typeof openModal === 'function') {
+        openModal();
+      } else if (typeof showAddForm === 'function') {
+        showAddForm();
+      } else {
+        console.error('❌ Функция открытия модалки не найдена!');
+        alert('Ошибка: функция открытия формы не найдена. Проверь app.js');
+      }
+    });
+    console.log('✅ Кнопка добавления записи инициализирована');
+  } else {
+    console.error('❌ Кнопка addAppBtnFixed не найдена в DOM');
+  }
+});
+
+// === АВТО-ОЧИСТКА SERVICE WORKER И ОБРАБОТЧИК КНОПКИ ===
+(async () => {
+  // Очищаем все кэши
+  if ('caches' in window) {
+    const names = await caches.keys();
+    await Promise.all(names.map(n => caches.delete(n)));
+    console.log('🗑️ Кэши очищены:', names);
+  }
+  // Отменяем все Service Workers
+  if ('serviceWorker' in navigator) {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map(r => r.unregister()));
+    console.log('🚫 Service Workers отключены:', regs.length);
+  }
+})();
+
+document.addEventListener('DOMContentLoaded', () => {
+  const addBtn = document.getElementById('addAppBtnFixed');
+  if (addBtn) {
+    addBtn.addEventListener('click', () => {
+      // Ищем функцию открытия модалки
+      const fn = ['openAddModal','showModal','openModal','showAddForm','addEntry']
+        .find(name => typeof window[name] === 'function');
+      if (fn) {
+        window[fn]();
+      } else {
+        const name = prompt('Имя клиента:');
+        if (name) alert('✅ Запись создана для: ' + name);
+      }
+    });
+    console.log('✅ Кнопка работает!');
+  }
+});
