@@ -713,3 +713,49 @@ window.savePriceItem = function(e) {
   
   return false;
 };
+
+// === ФУНКЦИЯ ОТРИСОВКИ УТРЕННЕГО БРИФИНГА ===
+function renderMorningBriefing() {
+  const briefing = Predictor.getMorningBriefing();
+  const calendarView = document.getElementById('calendarView');
+  if (!calendarView) return;
+
+  let reminderHtml = '';
+  if (briefing.reminders.length > 0) {
+    reminderHtml = `<div style="background:#fff3e0; border-left:4px solid #ff9800; padding:10px; margin-top:10px; border-radius:4px;">
+      <b>🔔 Пора напомнить о себе (${briefing.reminders.length}):</b>
+      <ul style="margin:5px 0 0 20px; padding:0; font-size:13px;">
+        ${briefing.reminders.slice(0, 3).map(r => `<li><b>${r.name}</b> (был ${r.daysAgo} дн. назад, средн. интервал: ${r.avgInterval} дн.)</li>`).join('')}
+      </ul>
+    </div>`;
+  }
+
+  const briefingHtml = `
+    <div style="background: linear-gradient(135deg, #ff6b9d, #ff8e53); color: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(255,107,157,0.3);">
+      <h3 style="margin:0 0 10px 0; font-size:18px;">☀️ Доброе утро, Света!</h3>
+      <p style="margin:0 0 10px 0; opacity:0.9; font-size:14px; text-transform:capitalize;">${briefing.date}</p>
+      <div style="display:flex; justify-content:space-between; text-align:center;">
+        <div><div style="font-size:20px; font-weight:bold;">${briefing.workCount}</div><div style="font-size:12px; opacity:0.8;">Записей</div></div>
+        <div><div style="font-size:20px; font-weight:bold;">${briefing.income}₽</div><div style="font-size:12px; opacity:0.8;">Доход сегодня</div></div>
+        <div><div style="font-size:20px; font-weight:bold;">${briefing.familyCount}</div><div style="font-size:12px; opacity:0.8;">Семейных дел</div></div>
+      </div>
+      ${reminderHtml}
+    </div>
+  `;
+
+  // Вставляем брифинг ПЕРЕД календарем
+  const container = document.getElementById('calendarContainer') || calendarView;
+  if (container.firstChild && container.firstChild.id !== 'morningBriefing') {
+    const div = document.createElement('div');
+    div.id = 'morningBriefing';
+    div.innerHTML = briefingHtml;
+    container.insertBefore(div, container.firstChild);
+  }
+}
+
+// Вызываем при инициализации и при смене вкладки
+const originalCalendarRender = CalendarView.render;
+CalendarView.render = function() {
+  originalCalendarRender.apply(this, arguments);
+  setTimeout(renderMorningBriefing, 100); // Небольшая задержка, чтобы DOM успел отрисоваться
+};
