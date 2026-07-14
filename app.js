@@ -759,3 +759,35 @@ CalendarView.render = function() {
   originalCalendarRender.apply(this, arguments);
   setTimeout(renderMorningBriefing, 100); // Небольшая задержка, чтобы DOM успел отрисоваться
 };
+function renderMorningBriefing() {
+  if (typeof Predictor === 'undefined') return;
+  const briefing = Predictor.getMorningBriefing();
+  const container = document.getElementById('calendarView');
+  if (!container || document.getElementById('morningBriefing')) return;
+
+  let reminderHtml = '';
+  if (briefing.reminders.length > 0) {
+    reminderHtml = `<div style="background:#fff3e0; border-left:4px solid #ff9800; padding:10px; margin-top:10px; border-radius:4px; color:#333;">
+      <b>🔔 Пора напомнить о себе:</b>
+      <ul style="margin:5px 0 0 20px; padding:0; font-size:13px;">
+        ${briefing.reminders.slice(0, 3).map(r => `<li><b>${r.name}</b> (был ${r.daysAgo} дн. назад)</li>`).join('')}
+      </ul>
+    </div>`;
+  }
+
+  const html = `
+    <div id="morningBriefing" style="background: linear-gradient(135deg, #ff6b9d, #ff8e53); color: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(255,107,157,0.3);">
+      <h3 style="margin:0 0 10px 0; font-size:18px;">☀️ Доброе утро, Света!</h3>
+      <p style="margin:0 0 10px 0; opacity:0.9; font-size:14px; text-transform:capitalize;">${briefing.date}</p>
+      <div style="display:flex; justify-content:space-between; text-align:center;">
+        <div><div style="font-size:20px; font-weight:bold;">${briefing.workCount}</div><div style="font-size:12px; opacity:0.8;">Записей</div></div>
+        <div><div style="font-size:20px; font-weight:bold;">${briefing.income}₽</div><div style="font-size:12px; opacity:0.8;">Доход</div></div>
+        <div><div style="font-size:20px; font-weight:bold;">${briefing.familyCount}</div><div style="font-size:12px; opacity:0.8;">Семья</div></div>
+      </div>
+      ${reminderHtml}
+    </div>
+  `;
+  container.insertAdjacentHTML('afterbegin', html);
+}
+const _oldCalRender = CalendarView.render;
+CalendarView.render = function() { _oldCalRender.apply(this, arguments); setTimeout(renderMorningBriefing, 200); };
