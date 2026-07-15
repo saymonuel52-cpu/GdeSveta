@@ -2128,3 +2128,191 @@ window.saveRecurringEvent = function(e) {
 };
 
 console.log('✅ Функции повторяющихся событий загружены');
+
+// === ВЕЧЕРНИЙ ОТЧЁТ И ПЛАН НА ЗАВТРА ===
+
+// Получить статистику дня
+window.getDailyStats = function(date = null) {
+  if (!date) {
+    date = new Date().toISOString().split('T')[0];
+  }
+  
+  const entries = Store.getEntries().filter(e => e.date === date);
+  const workEntries = entries.filter(e => e.category === 'work');
+  const familyEntries = entries.filter(e => e.category === 'family' || e.category === 'dog');
+  
+  const completed = workEntries.filter(e => e.status === 'done');
+  const cancelled = workEntries.filter(e => e.status === 'cancelled');
+  const pending = workEntries.filter(e => e.status === 'new' || e.status === 'confirmed');
+  
+  const totalIncome = completed.reduce((sum, e) => sum + (parseInt(e.price) || 0), 0);
+  const plannedIncome = workEntries.reduce((sum, e) => sum + (parseInt(e.price) || 0), 0);
+  
+  return {
+    date,
+    total: entries.length,
+    work: workEntries.length,
+    family: familyEntries.length,
+    completed: completed.length,
+    cancelled: cancelled.length,
+    pending: pending.length,
+    totalIncome,
+    plannedIncome,
+    entries: workEntries.sort((a, b) => a.time.localeCompare(b.time))
+  };
+};
+
+// Получить план на завтра
+window.getTomorrowPlan = function() {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+  
+  const entries = Store.getEntries()
+    .filter(e => e.date === tomorrowStr)
+    .sort((a, b) => a.time.localeCompare(b.time));
+  
+  const workEntries = entries.filter(e => e.category === 'work');
+  const familyEntries = entries.filter(e => e.category === 'family' || e.category === 'dog');
+  
+  const totalWorkTime = workEntries.reduce((sum, e) => sum + e.duration, 0);
+  const totalIncome = workEntries.reduce((sum, e) => sum + (parseInt(e.price) || 0), 0);
+  
+  // Проверяем, не перегружен ли день
+  const isOverloaded = workEntries.length > 6 || totalWorkTime > 480;
+  
+  return {
+    date: tomorrowStr,
+    entries,
+    workCount: workEntries.length,
+    familyCount: familyEntries.length,
+    totalWorkTime,
+    totalIncome,
+    isOverloaded,
+    entries
+  };
+};
+
+// Показать вечерний отчёт
+window.showEveningReport = function() {
+  const today = getDailyStats();
+  const tomorrow = getTomorrowPlan();
+  
+  const tomorrowDate = new Date(tomorrow.date).toLocaleDateString('ru-RU', { 
+    weekday: 'long', 
+    day: 'numeric', 
+    month: 'long' 
+  });
+  
+  let html = `
+    <div style="padding:10px;">
+      <h2 style="text-align:center;margin-bottom:20px;color:#1e293b;"> Итоги дня</h2>
+      
+      <!-- СЕГОДНЯ -->
+      <div style="background:linear-gradient(135deg,#10b981,#34d399);color:white;padding:20px;border-radius:16px;margin-bottom:20px;box-shadow:0 4px 12px rgba(16,185,129,0.3);">
+        <h3 style="margin:0 0 15px 0;font-size:20px;">✨ Сегодня</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;">
+          <div style="background:rgba(255,255,255,0.2);padding:10px;border-radius:10px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;">${today.completed}</div>
+            <div style="font-size:13px;opacity:0.9;">Выполнено</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.2);padding:10px;border-radius:10px;text-align:center;">
+            <div style="font-size:28px;font-weight:700;">${today.pending}</div>
+            <div style="font-size:13px;opacity:0.9;">Запланировано</div>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,0.2);padding:15px;border-radius:10px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span>💰 Заработано:</span>
+            <b>${today.totalIncome}₽</b>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span> Всего записей:</span>
+            <b>${today.work}</b>
+          </div>
+          ${today.cancelled > 0 ? `
+          <div style="display:flex;justify-content:space-between;">
+            <span>❌ Отменено:</span>
+            <b>${today.cancelled}</b>
+          </div>
+          ` : ''}
+        </div>
+      </div>
+      
+      <!-- ЗАВТРА -->
+      <div style="background:linear-gradient(135deg,#3b82f6,#60a5fa);color:white;padding:20px;border-radius:16px;margin-bottom:20px;box-shadow:0 4px 12px rgba(59,130,246,0.3);">
+        <h3 style="margin:0 0 15px 0;font-size:20px;"> Завтра (${tomorrowDate})</h3>
+        ${tomorrow.isOverloaded ? `
+        <div style="background:rgba(239,68,68,0.9);padding:10px;border-radius:10px;margin-bottom:10px;text-align:center;">
+          ⚠️ <b>Плотный день!</b> ${tomorrow.workCount} записей
+        </div>
+        ` : ''}
+        <div style="background:rgba(255,255,255,0.2);padding:15px;border-radius:10px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span>💼 Записей:</span>
+            <b>${tomorrow.workCount}</b>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span>👨‍👩👧 Семейных дел:</span>
+            <b>${tomorrow.familyCount}</b>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span>💰 Планируется:</span>
+            <b>${tomorrow.totalIncome}₽</b>
+          </div>
+        </div>
+        ${tomorrow.entries.length > 0 ? `
+        <div style="font-size:14px;">
+          <b>Расписание:</b>
+          <div style="margin-top:8px;max-height:150px;overflow-y:auto;">
+            ${tomorrow.entries.map(e => `
+              <div style="background:rgba(255,255,255,0.1);padding:8px;margin:5px 0;border-radius:6px;">
+                ${e.time} - ${e.name} (${e.duration} мин)
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : '<div style="text-align:center;padding:10px;opacity:0.9;">🎉 Завтра выходной!</div>'}
+      </div>
+      
+      <button onclick="Modal.close()" 
+        style="width:100%;padding:15px;background:#e0e0e0;color:#333;border:none;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer;">
+        Закрыть
+      </button>
+    </div>
+  `;
+  
+  Modal.form({ title: '📊 Вечерний отчёт', content: html });
+};
+
+// Автоматическая проверка времени (вызывать периодически)
+window.checkEveningTime = function() {
+  const now = new Date();
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+  
+  // Показываем отчёт в 20:00-22:00 если ещё не показали сегодня
+  if (hours >= 20 && hours < 22) {
+    const lastShown = Storage.get('eveningReportShown', '');
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (lastShown !== today) {
+      // Проверяем, были ли сегодня записи
+      const stats = getDailyStats();
+      if (stats.work > 0) {
+        setTimeout(() => {
+          showEveningReport();
+          Storage.set('eveningReportShown', today);
+        }, 1000);
+      }
+    }
+  }
+};
+
+// Запускаем проверку каждую минуту
+setInterval(checkEveningTime, 60000);
+
+// Проверяем сразу при загрузке
+setTimeout(checkEveningTime, 2000);
+
+console.log('✅ Вечерний отчёт загружен');
