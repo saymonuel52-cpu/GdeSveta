@@ -2016,3 +2016,39 @@ body.dark-theme .note-filters button.active {
   background: linear-gradient(135deg, #ff6b9d, #ff8e53) !important;
   color: white !important;
 }
+
+/* Карточки членов семьи */
+.family-member-card {
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.4s ease;
+}
+
+.family-member-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;
+}
+
+.family-member-card button {
+  transition: all 0.2s;
+}
+
+.family-member-card button:hover {
+  transform: scale(1.1);
+}
+
+/* Кнопки действий в карточке */
+.family-member-card button {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Анимация появления */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1825,3 +1825,167 @@ window.switchTab = function(tabName) {
 };
 
 console.log('✅ Функции вкладки "Собака" загружены');
+
+// === РЕДАКТИРОВАНИЕ ЧЛЕНОВ СЕМЬИ ===
+
+// Открыть форму редактирования члена семьи
+window.editFamilyMember = function(id) {
+  console.log('️ editFamilyMember:', id);
+  const member = Store.getFamilyMembers().find(m => m.id === id);
+  if (!member) {
+    Modal.alert('❌ Член семьи не найден!');
+    return;
+  }
+  
+  const roles = [
+    { value: 'Сын', label: ' Сын' },
+    { value: 'Дочь', label: '👧 Дочь' },
+    { value: 'Муж', label: '👨 Муж' },
+    { value: 'Жена', label: '👩 Жена' },
+    { value: 'Другое', label: '👤 Другое' }
+  ];
+  
+  const roleOptions = roles.map(r => 
+    `<option value="${r.value}" ${member.role === r.value ? 'selected' : ''}>${r.label}</option>`
+  ).join('');
+  
+  const content = `
+    <form id="familyEditForm" onsubmit="return saveFamilyMemberEdit(event, ${id})">
+      <label>👤 Имя</label>
+      <input type="text" id="editMemberName" value="${member.name || ''}" required
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+      
+      <label>🎭 Роль в семье</label>
+      <select id="editMemberRole" required
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+        ${roleOptions}
+      </select>
+      
+      <label>🏫 Школа / Садик / Работа</label>
+      <input type="text" id="editMemberSchool" value="${member.school || member.place || ''}"
+        placeholder="Напр. Школа №5, 3 класс"
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+      
+      <label>🎂 Возраст</label>
+      <input type="number" id="editMemberAge" value="${member.age || ''}" min="0" max="100"
+        placeholder="Напр. 8"
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+      
+      <label>🎨 Кружки / Секции</label>
+      <textarea id="editMemberCircles" rows="2"
+        placeholder="Напр. Танцы (вт, чт), Плавание (сб)"
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">${member.circles || ''}</textarea>
+      
+      <label>💬 Примечания</label>
+      <textarea id="editMemberNotes" rows="2"
+        placeholder="Напр. Аллергия на орехи, любит рисовать"
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">${member.notes || ''}</textarea>
+      
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button type="submit"
+          style="flex:1;padding:15px;background:linear-gradient(135deg,#3b82f6,#60a5fa);color:white;border:none;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(59,130,246,0.4);">
+          💾 Сохранить изменения
+        </button>
+        <button type="button" onclick="Modal.close()"
+          style="flex:1;padding:15px;background:#e0e0e0;color:#333;border:none;border-radius:12px;font-weight:700;cursor:pointer;">
+          Отмена
+        </button>
+      </div>
+    </form>
+  `;
+  
+  Modal.form({ title: '✏️ Редактировать члена семьи', content });
+};
+
+// Сохранить изменения члена семьи
+window.saveFamilyMemberEdit = function(e, id) {
+  e.preventDefault();
+  console.log('💾 saveFamilyMemberEdit:', id);
+  
+  const members = Store.getFamilyMembers();
+  const index = members.findIndex(m => m.id === id);
+  
+  if (index === -1) {
+    Modal.alert('❌ Член семьи не найден!');
+    return false;
+  }
+  
+  members[index] = {
+    ...members[index],
+    name: document.getElementById('editMemberName').value,
+    role: document.getElementById('editMemberRole').value,
+    school: document.getElementById('editMemberSchool').value,
+    place: document.getElementById('editMemberSchool').value,
+    age: parseInt(document.getElementById('editMemberAge').value) || null,
+    circles: document.getElementById('editMemberCircles').value,
+    notes: document.getElementById('editMemberNotes').value,
+    updatedAt: new Date().toISOString()
+  };
+  
+  Storage.set('familyMembers', JSON.stringify(members));
+  Modal.close();
+  Modal.alert('✅ Изменения сохранены!');
+  
+  setTimeout(() => {
+    if (typeof FamilyView !== 'undefined') FamilyView.render();
+    if (typeof showFamilyMembers === 'function') showFamilyMembers();
+  }, 200);
+  
+  return false;
+};
+
+// Улучшенный рендеринг карточки члена семьи с кнопкой редактирования
+window.renderFamilyMemberCard = function(member) {
+  const roleEmojis = {
+    'Сын': '👦',
+    'Дочь': '👧',
+    'Муж': '👨',
+    'Жена': '👩',
+    'Другое': '👤'
+  };
+  const emoji = roleEmojis[member.role] || '👤';
+  
+  return `
+    <div class="family-member-card" style="background:white;border-radius:16px;padding:15px;margin:10px 0;box-shadow:0 2px 8px rgba(0,0,0,0.1);border-left:4px solid #3b82f6;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:32px;">${emoji}</span>
+          <div>
+            <div style="font-weight:700;font-size:18px;color:#1e293b;">${member.name || 'Без имени'}</div>
+            <div style="font-size:13px;color:#64748b;">${member.role || 'Член семьи'}${member.age ? ' · ' + member.age + ' лет' : ''}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:5px;">
+          <button onclick="editFamilyMember(${member.id})" 
+            style="background:#3b82f6;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;font-weight:600;">
+            ✏️
+          </button>
+          <button onclick="deleteFamilyMember(${member.id})" 
+            style="background:#ef4444;color:white;border:none;border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;font-weight:600;">
+            🗑️
+          </button>
+        </div>
+      </div>
+      ${member.school ? `<div style="font-size:14px;color:#334155;margin:5px 0;">🏫 ${member.school}</div>` : ''}
+      ${member.circles ? `<div style="font-size:14px;color:#334155;margin:5px 0;"> ${member.circles}</div>` : ''}
+      ${member.notes ? `<div style="font-size:13px;color:#64748b;margin-top:8px;font-style:italic;">💬 ${member.notes}</div>` : ''}
+    </div>
+  `;
+};
+
+console.log('✅ Функции редактирования семьи загружены');
+
+// Удаление члена семьи
+window.deleteFamilyMember = function(id) {
+  Modal.confirm('Удалить этого члена семьи?', () => {
+    const members = Store.getFamilyMembers();
+    const filtered = members.filter(m => m.id !== id);
+    Storage.set('familyMembers', JSON.stringify(filtered));
+    Modal.close();
+    Modal.alert('✅ Член семьи удалён!');
+    setTimeout(() => {
+      if (typeof FamilyView !== 'undefined') FamilyView.render();
+      if (typeof showFamilyMembers === 'function') showFamilyMembers();
+    }, 200);
+  });
+};

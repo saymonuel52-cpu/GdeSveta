@@ -1,5 +1,6 @@
 /**
- * FAMILY VIEW v2.0
+ * FAMILY VIEW v3.0
+ * С редактированием и красивыми карточками
  */
 
 const FamilyView = {
@@ -16,43 +17,50 @@ const FamilyView = {
   render() {
     if (!this.container) return;
     
-    let entries = EntryService.getByCategory('family');
-    const dogEntries = EntryService.getByCategory('dog');
-    entries = [...entries, ...dogEntries];
+    let members = Store.getFamilyMembers() || [];
     
+    // Фильтрация по роли
     if (this.filter !== 'all') {
-      const filterMap = {
-        school: ['Школа', 'Садик'],
-        circle: ['Кружок', 'Секция'],
-        doctor: ['Врач'],
-        dog: ['Ветеринар', 'Груминг', 'Прогулка']
+      const roleMap = {
+        school: ['Сын', 'Дочь'],
+        circles: ['Сын', 'Дочь'],
+        doctor: ['Сын', 'Дочь', 'Муж', 'Жена'],
+        dog: []
       };
-      const allowed = filterMap[this.filter] || [];
-      entries = entries.filter(e => allowed.includes(e.service));
+      const allowed = roleMap[this.filter] || [];
+      if (allowed.length > 0) {
+        members = members.filter(m => allowed.includes(m.role));
+      }
     }
-    
-    entries.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
     
     let html = `
       <div class="family-filters">
         <button class="family-filter ${this.filter === 'all' ? 'active' : ''}" data-filter="all">Все</button>
-        <button class="family-filter ${this.filter === 'school' ? 'active' : ''}" data-filter="school">🏫 Школа</button>
-        <button class="family-filter ${this.filter === 'circle' ? 'active' : ''}" data-filter="circle"> Кружки</button>
+        <button class="family-filter ${this.filter === 'school' ? 'active' : ''}" data-filter="school"> Школа</button>
+        <button class="family-filter ${this.filter === 'circles' ? 'active' : ''}" data-filter="circles"> Кружки</button>
         <button class="family-filter ${this.filter === 'doctor' ? 'active' : ''}" data-filter="doctor"> Врачи</button>
-        <button class="family-filter ${this.filter === 'dog' ? 'active' : ''}" data-filter="dog"> Собака</button>
+        <button class="family-filter ${this.filter === 'dog' ? 'active' : ''}" data-filter="dog">🐕 Собака</button>
       </div>
     `;
     
-    if (entries.length === 0) {
-      html += '<div class="empty-state">Нет семейных событий</div>';
+    if (members.length === 0) {
+      html += '<div class="empty-state">Нет членов семьи</div>';
     } else {
-      entries.forEach(entry => {
-        html += EntryCard.render(entry);
+      members.forEach(member => {
+        if (typeof renderFamilyMemberCard === 'function') {
+          html += renderFamilyMemberCard(member);
+        } else {
+          html += `<div style="padding:15px;background:white;border-radius:12px;margin:10px 0;">
+            <b>${member.name}</b> - ${member.role || ''}
+            <button onclick="editFamilyMember(${member.id})" style="margin-left:10px;">✏️</button>
+          </div>`;
+        }
       });
     }
     
     this.container.innerHTML = html;
     
+    // Обработчики фильтров
     this.container.querySelectorAll('.family-filter').forEach(btn => {
       btn.addEventListener('click', () => {
         this.filter = btn.dataset.filter;
@@ -62,10 +70,9 @@ const FamilyView = {
   },
   
   setupListeners() {
-    Events.on('entry:created', () => this.render());
-    Events.on('entry:updated', () => this.render());
-    Events.on('entry:deleted', () => this.render());
+    Events.on('family:updated', () => this.render());
   }
 };
 
 window.FamilyView = FamilyView;
+console.log('✅ FamilyView v3.0 загружен');
