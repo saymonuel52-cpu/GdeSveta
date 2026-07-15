@@ -1507,3 +1507,163 @@ EntryCard.render = function(entry, options) {
   // Добавляем класс приоритета
   return html.replace('class="entry-card', `class="entry-card priority-${priority.key.toLowerCase()}"`);
 };
+
+// === ВИЗУАЛЬНЫЙ ПОИСК СВОБОДНЫХ ОКОН ===
+
+// Получить визуальное расписание дня
+window.getDayTimeline = function(date) {
+  const settings = JSON.parse(Storage.get('scheduleRules', '{"workStart":"09:00","workEnd":"20:00","bufferTime":10}'));
+  const buffer = settings.bufferTime || 10;
+  const [startH, startM] = settings.workStart.split(':').map(Number);
+  const [endH, endM] = settings.workEnd.split(':').map(Number);
+  const dayStart = startH * 60 + startM;
+  const dayEnd = endH * 60 + endM;
+  
+  const entries = Store.getEntries()
+    .filter(e => e.date === date)
+    .sort((a, b) => a.time.localeCompare(b.time));
+  
+  const slots = [];
+  let currentTime = dayStart;
+  
+  for (const entry of entries) {
+    const [eH, eM] = entry.time.split(':').map(Number);
+    const eStart = eH * 60 + eM;
+    const eEnd = eStart + entry.duration;
+    
+    // Свободное окно перед записью
+    if (eStart > currentTime) {
+      slots.push({
+        type: 'free',
+        start: currentTime,
+        end: eStart,
+        duration: eStart - currentTime
+      });
+    }
+    
+    // Запись
+    slots.push({
+      type: 'busy',
+      entry,
+      start: eStart,
+      end: eEnd,
+      duration: entry.duration
+    });
+    
+    // Буфер после записи
+    currentTime = eEnd + buffer;
+  }
+  
+  // Последнее свободное окно
+  if (currentTime < dayEnd) {
+    slots.push({
+      type: 'free',
+      start: currentTime,
+      end: dayEnd,
+      duration: dayEnd - currentTime
+    });
+  }
+  
+  return slots;
+};
+
+// Открыть визуальное расписание
+window.openDayTimeline = function(date = null) {
+  if (!date) {
+    date = new Date().toISOString().split('T')[0];
+  }
+  
+  const slots = getDayTimeline(date);
+  const dateFormatted = new Date(date).toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+  
+  let html = `
+    <div style="padding:10px;">
+      <h3 style="margin:0 0 15px 0;text-align:center;text-transform:capitalize;">${dateFormatted}</h3>
+      <div style="position:relative;">
+  `;
+  
+  slots.forEach((slot, index) => {
+    const startStr = `${Math.floor(slot.start/60).toString().padStart(2,'0')}:${(slot.start%60).toString().padStart(2,'0')}`;
+    const endStr = `${Math.floor(slot.end/60).toString().padStart(2,'0')}:${(slot.end%60).toString().padStart(2,'0')}`;
+    const duration = slot.duration;
+    
+    if (slot.type === 'free') {
+      html += `
+        <div onclick="bookFreeSlot('${date}', '${startStr}', ${duration})" 
+             style="background:linear-gradient(135deg,#10b981,#34d399);color:white;padding:15px;margin:8px 0;border-radius:12px;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px rgba(16,185,129,0.3);"
+             onmouseover="this.style.transform='scale(1.02)'"
+             onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:18px;font-weight:700;margin-bottom:5px;">✅ Свободно: ${startStr} - ${endStr}</div>
+          <div style="font-size:14px;opacity:0.9;">⏱️ ${duration} минут • Нажми, чтобы записать</div>
+        </div>
+      `;
+    } else {
+      const entry = slot.entry;
+      const priority = getEventPriority(entry);
+      const categoryColors = {
+        work: 'linear-gradient(135deg,#ff6b9d,#ff8e53)',
+        family: 'linear-gradient(135deg,#3b82f6,#60a5fa)',
+        dog: 'linear-gradient(135deg,#f59e0b,#fbbf24)',
+        note: 'linear-gradient(135deg,#8b5cf6,#a78bfa)'
+      };
+      const color = categoryColors[entry.category] || categoryColors.work;
+      
+      html += `
+        <div style="background:${color};color:white;padding:15px;margin:8px 0;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.2);">
+          <div style="font-size:18px;font-weight:700;margin-bottom:5px;">${entry.name}</div>
+          <div style="font-size:14px;opacity:0.9;"> ${startStr} - ${endStr} • ⏱️ ${duration} мин</div>
+          ${entry.price ? `<div style="font-size:14px;opacity:0.9;margin-top:5px;">💰 ${entry.price}₽</div>` : ''}
+          <div style="font-size:11px;opacity:0.8;margin-top:5px;">${priority.label}</div>
+        </div>
+      `;
+    }
+  });
+  
+  if (slots.length === 0) {
+    html += `<div style="text-align:center;padding:40px;color:#999;">Нет записей на этот день</div>`;
+  }
+  
+  html += `
+      </div>
+      <div style="margin-top:20px;text-align:center;">
+        <button onclick="Modal.close()" style="padding:12px 30px;background:#e0e0e0;color:#333;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Закрыть</button>
+      </div>
+    </div>
+  `;
+  
+  Modal.form({ title: ' Расписание дня', content: html });
+};
+
+// Забронировать свободное окно
+window.bookFreeSlot = function(date, startTime, duration) {
+  Modal.close();
+  setTimeout(() => {
+    openWorkForm(null);
+    setTimeout(() => {
+      document.getElementById('entryDate').value = date;
+      document.getElementById('entryTime').value = startTime;
+      document.getElementById('entryDuration').value = Math.min(duration, 60);
+    }, 100);
+  }, 200);
+};
+
+// Добавить кнопку в интерфейс
+const _origWorkViewRender = WorkView.render;
+WorkView.render = function() {
+  _origWorkViewRender.apply(this, arguments);
+  
+  // Добавляем кнопку "Свободные окна"
+  setTimeout(() => {
+    const workView = document.getElementById('workView');
+    if (workView && !document.getElementById('freeSlotsBtn')) {
+      const btn = document.createElement('button');
+      btn.id = 'freeSlotsBtn';
+      btn.textContent = '🔍 Свободные окна';
+      btn.style.cssText = 'width:100%;padding:15px;margin:15px 0;background:linear-gradient(135deg,#10b981,#34d399);color:white;border:none;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.4);';
+      btn.onclick = () => openDayTimeline();
+      workView.insertBefore(btn, workView.firstChild);
+    }
+  }, 100);
+};
+
+console.log('✅ Визуальный поиск свободных окон загружен');
