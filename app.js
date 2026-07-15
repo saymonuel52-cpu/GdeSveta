@@ -791,3 +791,31 @@ function renderMorningBriefing() {
 }
 const _oldCalRender = CalendarView.render;
 CalendarView.render = function() { _oldCalRender.apply(this, arguments); setTimeout(renderMorningBriefing, 200); };
+
+// === ИНТЕГРАЦИЯ ПРОВЕРКИ РАБОЧЕГО ВРЕМЕНИ ===
+const _originalHandleWorkSubmit = window.handleWorkSubmit;
+window.handleWorkSubmit = function(e) {
+  e.preventDefault();
+  
+  const date = document.getElementById('entryDate').value;
+  const time = document.getElementById('entryTime').value;
+  const duration = parseInt(document.getElementById('entryDuration').value);
+  
+  // Проверяем правила расписания
+  const validation = ScheduleRules.validateBooking(date, time, duration);
+  
+  if (!validation.valid) {
+    Modal.alert(validation.errors.join('\n'));
+    return false;
+  }
+  
+  if (validation.warnings.length > 0) {
+    Modal.confirm(validation.warnings.join('\n') + '\n\nПродолжить?', () => {
+      _originalHandleWorkSubmit(e);
+    });
+    return false;
+  }
+  
+  _originalHandleWorkSubmit(e);
+  return false;
+};
