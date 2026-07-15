@@ -31,6 +31,7 @@
         <div class="tab-header">
           <h2>💼 Работа</h2>
           <button class="tab-action-btn" onclick="showPriceList()">💰 Прайс</button>
+          <button class="tab-action-btn" onclick="openRecurringForm()" style="background:#8b5cf6;color:white;border:none;padding:12px 20px;border-radius:10px;font-weight:600;cursor:pointer;"> Повтор</button>
           <button class="tab-action-btn" onclick="openScheduleSettings()" style="background:#667eea;color:white;border:none;padding:12px 20px;border-radius:10px;font-weight:600;cursor:pointer;">⚙️ Настройки</button>
         </div>
         <div id="workView"></div>
@@ -123,6 +124,7 @@
   <script src="src/globals.js?v=4"></script>
   <script src="src/services/Predictor.js"></script>
   <script src="src/services/DogService.js"></script>
+  <script src="src/services/RecurringService.js"></script>
   <script src="src/services/ScheduleRules.js"></script>
 <script src="theme-switcher.js"></script>
 <script src="theme-switcher.js"></script>

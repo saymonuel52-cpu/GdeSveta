@@ -1989,3 +1989,142 @@ window.deleteFamilyMember = function(id) {
     }, 200);
   });
 };
+
+// === ФОРМА ПОВТОРЯЮЩЕГОСЯ СОБЫТИЯ ===
+
+window.openRecurringForm = function() {
+  const repeatOptions = Object.entries(RecurringService.repeatTypes).map(([key, val]) => 
+    `<option value="${val.value}">${val.label}</option>`
+  ).join('');
+
+  const content = `
+    <form id="recurringForm" onsubmit="return saveRecurringEvent(event)">
+      <label>Название события *</label>
+      <input type="text" id="recurringName" placeholder="Напр. Школа, Кружок Танцы" required
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+
+      <label>Категория</label>
+      <select id="recurringCategory"
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+        <option value="family">👨‍👩‍👧 Семья</option>
+        <option value="work">💼 Работа</option>
+        <option value="dog">🐕 Собака</option>
+      </select>
+
+      <label>Тип услуги / события</label>
+      <input type="text" id="recurringService" placeholder="Напр. Школа №5, Танцы"
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+
+      <label>Время *</label>
+      <input type="time" id="recurringTime" required
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+
+      <label>Длительность (минут) *</label>
+      <input type="number" id="recurringDuration" value="60" min="10" max="480" required
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+
+      <label>Тип повторения *</label>
+      <select id="recurringType" required onchange="toggleDaysOfWeek()"
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+        ${repeatOptions}
+      </select>
+
+      <div id="daysOfWeekSelector" style="display:none;margin-bottom:15px;">
+        <label>Дни недели:</label>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:5px;">
+          ${['Вс','Пн','Вт','Ср','Чт','Пт','Сб'].map((day, idx) => `
+            <label style="display:flex;flex-direction:column;align-items:center;padding:8px;background:#f5f5f5;border-radius:8px;cursor:pointer;">
+              <input type="checkbox" class="day-checkbox" value="${idx}" style="margin-bottom:5px;">
+              <span style="font-size:12px;">${day}</span>
+            </label>
+          `).join('')}
+        </div>
+      </div>
+
+      <label>Дата начала *</label>
+      <input type="date" id="recurringStartDate" required
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+
+      <label>Дата окончания *</label>
+      <input type="date" id="recurringEndDate" required
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+
+      <label>💰 Стоимость (за одно событие)</label>
+      <input type="number" id="recurringPrice" placeholder="Напр. 1500" min="0"
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+
+      <label>💬 Примечания</label>
+      <textarea id="recurringNotes" placeholder="Напр. С собой форма, пропуск" rows="2"
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;"></textarea>
+
+      <div style="background:#e0f2fe;padding:12px;border-radius:10px;margin:15px 0;font-size:14px;">
+        💡 <b>Совет:</b> Система автоматически создаст события до указанной даты.
+        Можно исключить праздники и каникулы вручную.
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button type="submit"
+          style="flex:1;padding:15px;background:linear-gradient(135deg,#8b5cf6,#a78bfa);color:white;border:none;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(139,92,246,0.4);">
+          📅 Создать повторяющееся событие
+        </button>
+        <button type="button" onclick="Modal.close()"
+          style="flex:1;padding:15px;background:#e0e0e0;color:#333;border:none;border-radius:12px;font-weight:700;cursor:pointer;">
+          Отмена
+        </button>
+      </div>
+    </form>
+  `;
+
+  Modal.form({ title: '📅 Повторяющееся событие', content });
+
+  // Установить сегодняшнюю дату
+  setTimeout(() => {
+    document.getElementById('recurringStartDate').value = new Date().toISOString().split('T')[0];
+    const nextMonth = new Date();
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    document.getElementById('recurringEndDate').value = nextMonth.toISOString().split('T')[0];
+  }, 100);
+};
+
+// Переключение селектора дней недели
+window.toggleDaysOfWeek = function() {
+  const type = document.getElementById('recurringType').value;
+  const selector = document.getElementById('daysOfWeekSelector');
+  if (selector) {
+    selector.style.display = type === 'weekly' ? 'block' : 'none';
+  }
+};
+
+// Сохранение повторяющегося события
+window.saveRecurringEvent = function(e) {
+  e.preventDefault();
+
+  const daysOfWeek = Array.from(document.querySelectorAll('.day-checkbox:checked')).map(cb => parseInt(cb.value));
+
+  const data = {
+    name: document.getElementById('recurringName').value,
+    category: document.getElementById('recurringCategory').value,
+    service: document.getElementById('recurringService').value,
+    time: document.getElementById('recurringTime').value,
+    duration: parseInt(document.getElementById('recurringDuration').value),
+    repeatType: document.getElementById('recurringType').value,
+    daysOfWeek: daysOfWeek,
+    startDate: document.getElementById('recurringStartDate').value,
+    endDate: document.getElementById('recurringEndDate').value,
+    price: parseInt(document.getElementById('recurringPrice').value || 0),
+    notes: document.getElementById('recurringNotes').value
+  };
+
+  RecurringService.create(data);
+  Modal.close();
+  Modal.alert('✅ Повторяющееся событие создано!\n\nСобытия автоматически добавлены в календарь.');
+  setTimeout(() => {
+    if (typeof CalendarView !== 'undefined') CalendarView.render();
+    if (typeof WorkView !== 'undefined') WorkView.render();
+    if (typeof FamilyView !== 'undefined') FamilyView.render();
+  }, 200);
+
+  return false;
+};
+
+console.log('✅ Функции повторяющихся событий загружены');

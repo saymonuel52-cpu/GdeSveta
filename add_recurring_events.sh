@@ -1,465 +1,383 @@
 #!/bin/bash
-echo "🔁 Добавляю повторяющиеся события..."
+echo "📅 ДОБАВЛЯЮ ПОВТОРЯЮЩИЕСЯ СОБЫТИЯ С ДАТАМИ..."
 
-# 1. Обновляем Entry.js — добавляем поля для повторения
-cat > src/models/Entry.js << 'ENTRY'
+# 1. Создаём сервис повторяющихся событий
+cat > src/services/RecurringService.js << 'RECURRING'
 /**
- * ENTRY MODEL
- * Модель записи с повторяющимися событиями
+ * RECURRING SERVICE
+ * Управление повторяющимися событиями
  */
 
-const Entry = {
-  create(data) {
-    const now = new Date().toISOString();
-    return {
+const RecurringService = {
+  // Типы повторений
+  repeatTypes: {
+    daily: { label: 'Ежедневно', value: 'daily' },
+    weekdays: { label: 'По будням (Пн-Пт)', value: 'weekdays' },
+    weekly: { label: 'Еженедельно', value: 'weekly' },
+    monthly: { label: 'Ежемесячно', value: 'monthly' }
+  },
+
+  // Создать повторяющееся событие
+  create: function(data) {
+    const recurring = {
       id: Utils.generateId(),
-      category: data.category || 'work',
-      name: data.name || '',
-      phone: data.phone || '',
-      date: data.date || Utils.getToday(),
-      time: data.time || Utils.getNow(),
-      duration: data.duration || 60,
-      service: data.service || '',
-      zone: data.zone || '',
-      notes: data.notes || '',
+      name: data.name,
+      service: data.service,
+      time: data.time,
+      duration: data.duration,
+      category: data.category,
+      repeatType: data.repeatType,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      daysOfWeek: data.daysOfWeek || [], // для weekly: [1,3,5] = Пн,Ср,Пт
+      excludeDates: data.excludeDates || [], // праздники, каникулы
       price: data.price || 0,
-      status: data.status || 'new',
-      familyMemberId: data.familyMemberId || null,
-      // Повторяющиеся события
-      recurring: data.recurring || {
-        enabled: false,
-        type: 'daily', // daily, weekly, biweekly, monthly
-        endDate: null,
-        occurrences: null // количество повторений
-      },
-      parentEntryId: data.parentEntryId || null, // ID родительской записи
-      createdAt: now,
-      updatedAt: now
+      notes: data.notes || '',
+      createdAt: new Date().toISOString()
     };
-  },
-  
-  validate(entry) {
-    const errors = [];
-    if (!entry.name || entry.name.trim() === '') {
-      errors.push('Название обязательно');
-    }
-    if (!entry.date || !/^\d{4}-\d{2}-\d{2}$/.test(entry.date)) {
-      errors.push('Неверная дата');
-    }
-    if (!entry.time || !/^\d{2}:\d{2}$/.test(entry.time)) {
-      errors.push('Неверное время');
-    }
-    return { valid: errors.length === 0, errors };
-  },
-  
-  getEndTime(entry) {
-    return Utils.calcEndTime(entry.time, entry.duration);
-  },
-  
-  getStatusLabel(status) {
-    const labels = {
-      new: 'Новая',
-      confirmed: 'Подтверждена',
-      done: 'Выполнена',
-      cancelled: 'Отменена'
-    };
-    return labels[status] || status;
-  },
-  
-  getRecurringLabel(type) {
-    const labels = {
-      daily: 'Каждый день',
-      weekly: 'Каждую неделю',
-      biweekly: 'Каждые 2 недели',
-      monthly: 'Каждый месяц'
-    };
-    return labels[type] || type;
-  }
-};
 
-window.Entry = Entry;
-ENTRY
+    // Сохраняем в специальное хранилище
+    const recurringList = JSON.parse(Storage.get('recurringEvents', '[]'));
+    recurringList.push(recurring);
+    Storage.set('recurringEvents', JSON.stringify(recurringList));
 
-echo "✅ Entry.js обновлён — добавлены повторяющиеся события"
+    // Генерируем события до указанной даты
+    this.generateEvents(recurring);
 
-# 2. Обновляем EntryService — создание повторяющихся записей
-cat > src/services/EntryService.js << 'SERVICE'
-/**
- * ENTRY SERVICE
- * С поддержкой повторяющихся событий
- */
+    return recurring;
+  },
 
-const EntryService = {
-  getAll() {
-    return Store.getEntries();
-  },
-  
-  getByDate(date) {
-    return Store.getEntries().filter(e => e.date === date && e.status !== 'cancelled');
-  },
-  
-  getByCategory(category) {
-    return Store.getEntries().filter(e => e.category === category && e.status !== 'cancelled');
-  },
-  
-  getByPeriod(startDate, endDate) {
-    return Store.getEntries().filter(e => {
-      return e.date >= startDate && e.date <= endDate && e.status !== 'cancelled';
-    });
-  },
-  
-  create(data, force = false) {
-    const entry = Entry.create(data);
-    const validation = Entry.validate(entry);
-    
-    if (!validation.valid) {
-      throw new Error(validation.errors.join(', '));
-    }
-    
-    // Проверка конфликтов только для рабочих записей
-    if (entry.category === 'work' && !force) {
-      const conflict = this.checkConflict(entry);
-      if (conflict) {
-        throw new Error(`Конфликт с записью: ${conflict.name}`);
+  // Сгенерировать события из шаблона
+  generateEvents: function(recurring) {
+    const start = new Date(recurring.startDate);
+    const end = new Date(recurring.endDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let currentDate = new Date(start);
+    const generatedEntries = [];
+
+    while (currentDate <= end) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      const dayOfWeek = currentDate.getDay();
+
+      // Проверяем, подходит ли день
+      let shouldCreate = false;
+
+      switch (recurring.repeatType) {
+        case 'daily':
+          shouldCreate = true;
+          break;
+        case 'weekdays':
+          shouldCreate = dayOfWeek >= 1 && dayOfWeek <= 5; // Пн-Пт
+          break;
+        case 'weekly':
+          shouldCreate = recurring.daysOfWeek.includes(dayOfWeek);
+          break;
+        case 'monthly':
+          shouldCreate = currentDate.getDate() === start.getDate();
+          break;
       }
-    }
-    
-    Store.addEntry(entry);
-    Events.emit('entry:created', entry);
-    
-    // Если повторяющееся — создаём серии
-    if (entry.recurring && entry.recurring.enabled) {
-      this.createRecurringEntries(entry);
-    }
-    
-    return entry;
-  },
-  
-  /**
-   * Создать серию повторяющихся записей
-   */
-  createRecurringEntries(parentEntry) {
-    const recurring = parentEntry.recurring;
-    if (!recurring || !recurring.enabled) return;
-    
-    const startDate = new Date(parentEntry.date);
-    let endDate = recurring.endDate ? new Date(recurring.endDate) : null;
-    const maxOccurrences = recurring.occurrences || 52; // максимум 52 повторения
-    
-    const occurrences = [];
-    let currentDate = new Date(startDate);
-    let count = 0;
-    
-    while ((!endDate || currentDate <= endDate) && count < maxOccurrences) {
-      count++;
-      
-      // Создаём следующую запись
-      const nextDate = new Date(currentDate);
-      const dateStr = nextDate.toISOString().split('T')[0];
-      
-      // Не создаём дубликат первой записи
-      if (dateStr !== parentEntry.date) {
-        const newEntry = Entry.create({
-          ...parentEntry,
+
+      // Проверяем, не исключена ли дата
+      const isExcluded = recurring.excludeDates.some(exclude => {
+        const excludeDate = new Date(exclude).toISOString().split('T')[0];
+        return excludeDate === dateStr;
+      });
+
+      // Создаём событие если нужно и дата не в прошлом
+      if (shouldCreate && !isExcluded && currentDate >= today) {
+        const entry = {
+          id: Utils.generateId(),
+          name: recurring.name,
+          service: recurring.service,
+          category: recurring.category,
           date: dateStr,
-          parentEntryId: parentEntry.id,
-          recurring: { enabled: false } // У дочерних записей повторение отключено
-        });
-        
-        // Проверяем конфликты
-        const conflict = this.checkConflict(newEntry);
-        if (!conflict) {
-          Store.addEntry(newEntry);
-          occurrences.push(newEntry);
+          time: recurring.time,
+          duration: recurring.duration,
+          price: recurring.price,
+          notes: recurring.notes + ' (повторяющееся)',
+          status: 'new',
+          recurringId: recurring.id,
+          createdAt: new Date().toISOString()
+        };
+
+        // Проверяем, нет ли уже такого события
+        const exists = Store.getEntries().some(e => 
+          e.date === entry.date && 
+          e.time === entry.time && 
+          e.recurringId === recurring.id
+        );
+
+        if (!exists) {
+          Store.addEntry(entry);
+          generatedEntries.push(entry);
         }
       }
-      
-      // Переходим к следующей дате
-      if (recurring.type === 'daily') {
-        currentDate.setDate(currentDate.getDate() + 1);
-      } else if (recurring.type === 'weekly') {
-        currentDate.setDate(currentDate.getDate() + 7);
-      } else if (recurring.type === 'biweekly') {
-        currentDate.setDate(currentDate.getDate() + 14);
-      } else if (recurring.type === 'monthly') {
-        currentDate.setMonth(currentDate.getMonth() + 1);
-      }
+
+      // Переходим к следующему дню
+      currentDate.setDate(currentDate.getDate() + 1);
     }
-    
-    if (occurrences.length > 0) {
-      Events.emit('recurring:created', {
-        parent: parentEntry,
-        occurrences: occurrences.length
-      });
-    }
-    
-    return occurrences;
+
+    Events.emit('entry:created', generatedEntries);
+    return generatedEntries;
   },
-  
-  update(id, updates) {
-    const entry = Store.getEntries().find(e => e.id === id);
-    if (!entry) throw new Error('Запись не найдена');
-    
-    const updated = { ...entry, ...updates, updatedAt: new Date().toISOString() };
-    const validation = Entry.validate(updated);
-    
-    if (!validation.valid) {
-      throw new Error(validation.errors.join(', '));
-    }
-    
-    Store.updateEntry(id, updated);
-    Events.emit('entry:updated', updated);
-    return updated;
+
+  // Получить все повторяющиеся шаблоны
+  getAll: function() {
+    return JSON.parse(Storage.get('recurringEvents', '[]'));
   },
-  
-  delete(id, deleteAllRecurring = false) {
-    const entry = Store.getEntries().find(e => e.id === id);
-    if (!entry) throw new Error('Запись не найдена');
-    
-    // Если это родительская запись и нужно удалить все
-    if (deleteAllRecurring && entry.recurring && entry.recurring.enabled) {
-      const allEntries = Store.getEntries();
-      const recurringEntries = allEntries.filter(e => e.parentEntryId === id);
-      
-      recurringEntries.forEach(e => {
-        Store.deleteEntry(e.id);
-      });
-    }
-    
-    Store.deleteEntry(id);
+
+  // Удалить шаблон и все связанные события
+  delete: function(id) {
+    const recurringList = this.getAll();
+    const filtered = recurringList.filter(r => r.id !== id);
+    Storage.set('recurringEvents', JSON.stringify(filtered));
+
+    // Удаляем все события этого шаблона
+    const entries = Store.getEntries();
+    const filteredEntries = entries.filter(e => e.recurringId !== id);
+    Storage.set('entries', JSON.stringify(filteredEntries));
+
     Events.emit('entry:deleted', id);
   },
-  
-  changeStatus(id, status) {
-    return this.update(id, { status });
-  },
-  
-  checkConflict(entry) {
-    const dayEntries = this.getByDate(entry.date);
+
+  // Обновить шаблон
+  update: function(id, data) {
+    const recurringList = this.getAll();
+    const index = recurringList.findIndex(r => r.id === id);
     
-    const entryStart = Utils.timeToMinutes(entry.time);
-    const entryEnd = entryStart + entry.duration;
-    
-    return dayEntries.find(e => {
-      if (e.id === entry.id) return false;
+    if (index !== -1) {
+      recurringList[index] = { ...recurringList[index], ...data };
+      Storage.set('recurringEvents', JSON.stringify(recurringList));
       
-      const eStart = Utils.timeToMinutes(e.time);
-      const eEnd = eStart + e.duration;
+      // Перегенерируем события
+      this.generateEvents(recurringList[index]);
       
-      return (entryStart < eEnd && entryEnd > eStart);
-    });
-  },
-  
-  getStats(startDate, endDate) {
-    const entries = this.getByPeriod(startDate, endDate);
-    const workEntries = entries.filter(e => e.category === 'work');
-    
-    return {
-      total: entries.length,
-      work: workEntries.length,
-      family: entries.filter(e => e.category === 'family').length,
-      done: entries.filter(e => e.status === 'done').length,
-      cancelled: entries.filter(e => e.status === 'cancelled').length,
-      income: workEntries.reduce((sum, e) => sum + e.price, 0)
-    };
-  },
-  
-  duplicate(id, newDate) {
-    const entry = Store.getEntries().find(e => e.id === id);
-    if (!entry) throw new Error('Запись не найдена');
-    
-    const duplicate = Entry.create({
-      ...entry,
-      date: newDate || entry.date,
-      name: entry.name + ' (копия)',
-      status: 'new',
-      recurring: { enabled: false }
-    });
-    
-    Store.addEntry(duplicate);
-    return duplicate;
-  },
-  
-  getUpcoming(limit = 5) {
-    const today = Utils.getToday();
-    return this.getAll()
-      .filter(e => e.date >= today && e.status !== 'cancelled')
-      .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
-      .slice(0, limit);
-  },
-  
-  clearAll() {
-    Storage.set('gdesveta_store', {
-      entries: [],
-      notes: Store.getNotes(),
-      priceList: Store.getPriceList(),
-      familyMembers: Store.getFamilyMembers()
-    });
-    Events.emit('store:cleared');
-  },
-  
-  /**
-   * Получить все повторяющиеся записи
-   */
-  getRecurringEntries() {
-    return Store.getEntries().filter(e => 
-      e.recurring && e.recurring.enabled
-    );
-  },
-  
-  /**
-   * Удалить все будущие повторения записи
-   */
-  deleteFutureRecurring(parentId) {
-    const allEntries = Store.getEntries();
-    const today = Utils.getToday();
-    
-    const futureRecurring = allEntries.filter(e => 
-      e.parentEntryId === parentId && e.date >= today
-    );
-    
-    futureRecurring.forEach(e => {
-      Store.deleteEntry(e.id);
-    });
-    
-    return futureRecurring.length;
+      Events.emit('entry:updated', id);
+    }
   }
 };
 
-window.EntryService = EntryService;
-SERVICE
+window.RecurringService = RecurringService;
+console.log('✅ RecurringService загружен');
+RECURRING
 
-echo "✅ EntryService обновлён — создание серий записей"
+echo "✅ RecurringService.js создан"
 
-# 3. Обновляем index.html — добавляем UI для повторяющихся событий
-cat > index.html << 'HTML'
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#ff6b9d">
-  <title>ГдеСвета - Семейный ежедневник</title>
-  <link rel="stylesheet" href="styles/main.css">
-</head>
-<body>
-  <div id="app">
-    <header>
-      <h1> ГдеСвета</h1>
-      <nav>
-        <button class="nav-btn active" data-tab="calendar">📅</button>
-        <button class="nav-btn" data-tab="work"></button>
-        <button class="nav-btn" data-tab="family">👨‍👧</button>
-        <button class="nav-btn" data-tab="notes">📝</button>
-        <button class="nav-btn" data-tab="stats"></button>
-      </nav>
-    </header>
+# 2. Добавляем в index.html
+sed -i '/<script src="src\/services\/DogService.js"><\/script>/a \  <script src="src/services/RecurringService.js"></script>' index.html
 
-    <main>
-      <div id="tab-calendar" class="tab-content active">
-        <div id="calendarView"></div>
-      </div>
+# 3. Добавляем форму создания повторяющегося события в app.js
+cat >> app.js << 'RECURRINGFORM'
 
-      <div id="tab-work" class="tab-content">
-        <div class="tab-header">
-          <h2> Работа</h2>
-          <button class="tab-action-btn" onclick="showPriceList()"> Прайс</button>
-        </div>
-        <div id="workView"></div>
-      </div>
+// === ФОРМА ПОВТОРЯЮЩЕГОСЯ СОБЫТИЯ ===
 
-      <div id="tab-family" class="tab-content">
-        <div class="tab-header">
-          <h2>👩‍👧 Семья</h2>
-          <button class="tab-action-btn" onclick="showFamilyMembers()"> Семья</button>
-        </div>
-        <div id="familyView"></div>
-      </div>
+window.openRecurringForm = function() {
+  const repeatOptions = Object.entries(RecurringService.repeatTypes).map(([key, val]) => 
+    `<option value="${val.value}">${val.label}</option>`
+  ).join('');
 
-      <div id="tab-notes" class="tab-content">
-        <div class="tab-header">
-          <h2> Заметки</h2>
-          <button class="tab-action-btn" onclick="openNoteForm()">+ Новая</button>
-        </div>
-        <div id="notesView"></div>
-      </div>
+  const content = `
+    <form id="recurringForm" onsubmit="return saveRecurringEvent(event)">
+      <label>Название события *</label>
+      <input type="text" id="recurringName" placeholder="Напр. Школа, Кружок Танцы" required
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
 
-      <div id="tab-stats" class="tab-content">
-        <h2>📊 Статистика</h2>
-        <div id="statsView"></div>
-        <div class="stats-actions">
-          <button id="exportBtn" class="action-btn">💾 Экспорт</button>
-          <button id="importBtn" class="action-btn">📂 Импорт</button>
-          <input type="file" id="importFile" accept=".json" style="display:none">
+      <label>Категория</label>
+      <select id="recurringCategory"
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+        <option value="family">👨‍👩‍👧 Семья</option>
+        <option value="work">💼 Работа</option>
+        <option value="dog">🐕 Собака</option>
+      </select>
+
+      <label>Тип услуги / события</label>
+      <input type="text" id="recurringService" placeholder="Напр. Школа №5, Танцы"
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+
+      <label>Время *</label>
+      <input type="time" id="recurringTime" required
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+
+      <label>Длительность (минут) *</label>
+      <input type="number" id="recurringDuration" value="60" min="10" max="480" required
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+
+      <label>Тип повторения *</label>
+      <select id="recurringType" required onchange="toggleDaysOfWeek()"
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+        ${repeatOptions}
+      </select>
+
+      <div id="daysOfWeekSelector" style="display:none;margin-bottom:15px;">
+        <label>Дни недели:</label>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:5px;">
+          ${['Вс','Пн','Вт','Ср','Чт','Пт','Сб'].map((day, idx) => `
+            <label style="display:flex;flex-direction:column;align-items:center;padding:8px;background:#f5f5f5;border-radius:8px;cursor:pointer;">
+              <input type="checkbox" class="day-checkbox" value="${idx}" style="margin-bottom:5px;">
+              <span style="font-size:12px;">${day}</span>
+            </label>
+          `).join('')}
         </div>
       </div>
-    </main>
 
-    <button class="add-btn-fixed" onclick="openQuickAdd()">+ Добавить</button>
-  </div>
+      <label>Дата начала *</label>
+      <input type="date" id="recurringStartDate" required
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
 
-  <div id="modalContainer"></div>
+      <label>Дата окончания *</label>
+      <input type="date" id="recurringEndDate" required
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
 
-  <script src="src/core/storage.js"></script>
-  <script src="src/core/events.js"></script>
-  <script src="src/core/utils.js"></script>
-  <script src="src/core/store.js"></script>
-  
-  <script src="src/models/Entry.js"></script>
-  <script src="src/models/Note.js"></script>
-  <script src="src/models/PriceItem.js"></script>
-  <script src="src/models/FamilyMember.js"></script>
-  
-  <script src="src/services/EntryService.js"></script>
-  <script src="src/services/NoteService.js"></script>
-  <script src="src/services/PriceService.js"></script>
-  <script src="src/services/FamilyService.js"></script>
-  <script src="src/services/ConflictChecker.js"></script>
-  
-  <script src="src/ui/components/Modal.js"></script>
-  <script src="src/ui/components/Calendar.js"></script>
-  <script src="src/ui/components/EntryCard.js"></script>
-  <script src="src/ui/components/NoteCard.js"></script>
-  <script src="src/ui/components/FamilySelect.js"></script>
-  
-  <script src="src/views/CalendarView.js"></script>
-  <script src="src/views/WorkView.js"></script>
-  <script src="src/views/FamilyView.js"></script>
-  <script src="src/views/NotesView.js"></script>
-  <script src="src/views/StatsView.js"></script>
-  
-  <script src="app.js"></script>
-</body>
-</html>
-HTML
+      <label>💰 Стоимость (за одно событие)</label>
+      <input type="number" id="recurringPrice" placeholder="Напр. 1500" min="0"
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
 
-echo "✅ index.html обновлён"
+      <label>💬 Примечания</label>
+      <textarea id="recurringNotes" placeholder="Напр. С собой форма, пропуск" rows="2"
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;"></textarea>
 
-# Перезапуск
-pkill -f "python.*http.server" 2>/dev/null
-sleep 1
-python -m http.server 8000 > /dev/null 2>&1 &
-sleep 2
+      <div style="background:#e0f2fe;padding:12px;border-radius:10px;margin:15px 0;font-size:14px;">
+        💡 <b>Совет:</b> Система автоматически создаст события до указанной даты.
+        Можно исключить праздники и каникулы вручную.
+      </div>
 
-if command -v termux-open-url &> /dev/null; then
-  termux-open-url "http://localhost:8000"
-  echo "✅ Приложение открыто!"
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button type="submit"
+          style="flex:1;padding:15px;background:linear-gradient(135deg,#8b5cf6,#a78bfa);color:white;border:none;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(139,92,246,0.4);">
+          📅 Создать повторяющееся событие
+        </button>
+        <button type="button" onclick="Modal.close()"
+          style="flex:1;padding:15px;background:#e0e0e0;color:#333;border:none;border-radius:12px;font-weight:700;cursor:pointer;">
+          Отмена
+        </button>
+      </div>
+    </form>
+  `;
+
+  Modal.form({ title: '📅 Повторяющееся событие', content });
+
+  // Установить сегодняшнюю дату
+  setTimeout(() => {
+    document.getElementById('recurringStartDate').value = new Date().toISOString().split('T')[0];
+    const nextMonth = new Date();
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    document.getElementById('recurringEndDate').value = nextMonth.toISOString().split('T')[0];
+  }, 100);
+};
+
+// Переключение селектора дней недели
+window.toggleDaysOfWeek = function() {
+  const type = document.getElementById('recurringType').value;
+  const selector = document.getElementById('daysOfWeekSelector');
+  if (selector) {
+    selector.style.display = type === 'weekly' ? 'block' : 'none';
+  }
+};
+
+// Сохранение повторяющегося события
+window.saveRecurringEvent = function(e) {
+  e.preventDefault();
+
+  const daysOfWeek = Array.from(document.querySelectorAll('.day-checkbox:checked')).map(cb => parseInt(cb.value));
+
+  const data = {
+    name: document.getElementById('recurringName').value,
+    category: document.getElementById('recurringCategory').value,
+    service: document.getElementById('recurringService').value,
+    time: document.getElementById('recurringTime').value,
+    duration: parseInt(document.getElementById('recurringDuration').value),
+    repeatType: document.getElementById('recurringType').value,
+    daysOfWeek: daysOfWeek,
+    startDate: document.getElementById('recurringStartDate').value,
+    endDate: document.getElementById('recurringEndDate').value,
+    price: parseInt(document.getElementById('recurringPrice').value || 0),
+    notes: document.getElementById('recurringNotes').value
+  };
+
+  RecurringService.create(data);
+  Modal.close();
+  Modal.alert('✅ Повторяющееся событие создано!\n\nСобытия автоматически добавлены в календарь.');
+  setTimeout(() => {
+    if (typeof CalendarView !== 'undefined') CalendarView.render();
+    if (typeof WorkView !== 'undefined') WorkView.render();
+    if (typeof FamilyView !== 'undefined') FamilyView.render();
+  }, 200);
+
+  return false;
+};
+
+console.log('✅ Функции повторяющихся событий загружены');
+RECURRINGFORM
+
+echo "✅ Форма повторяющихся событий добавлена"
+
+# 4. Добавляем кнопку в интерфейс (в календарь или работу)
+sed -i 's|<button class="tab-action-btn" onclick="showPriceList()">💰 Прайс</button>|<button class="tab-action-btn" onclick="showPriceList()">💰 Прайс</button>\n          <button class="tab-action-btn" onclick="openRecurringForm()" style="background:#8b5cf6;color:white;border:none;padding:12px 20px;border-radius:10px;font-weight:600;cursor:pointer;"> Повтор</button>|' index.html
+
+echo "✅ Кнопка 'Повтор' добавлена"
+
+# Git + сборка
+echo ""
+echo "🔄 Отправка на GitHub и сборка..."
+
+git add .
+git commit -m "feat: Добавлены повторяющиеся события с датами (школа, кружки)"
+git push origin main
+
+echo "📦 Сборка APK..."
+rm -rf android www
+mkdir -p www
+cp -r index.html manifest.json app.js styles/ src/ icons/ www/
+
+npm init -y > /dev/null 2>&1
+npm install @capacitor/core @capacitor/cli @capacitor/android --save > /dev/null 2>&1
+npx cap init "GdeSveta" "com.gdesveta.app" --web-dir="www" > /dev/null 2>&1
+npx cap add android > /dev/null 2>&1
+npx cap sync android > /dev/null 2>&1
+
+cd android
+chmod +x gradlew
+./gradlew assembleDebug > /dev/null 2>&1
+
+if [ -f "app/build/outputs/apk/debug/app-debug.apk" ]; then
+  cp app/build/outputs/apk/debug/app-debug.apk ../GdeSveta_Recurring.apk
+  cd ..
+  cp GdeSveta_Recurring.apk ~/storage/downloads/GdeSveta_Recurring.apk 2>/dev/null
+
+  echo ""
+  echo "═══════════════════════════════════════════════"
+  echo "📅 ПОВТОРЯЮЩИЕСЯ СОБЫТИЯ ГОТОВЫ!"
+  echo "═══════════════════════════════════════════════"
+  echo "📁 APK: ~/storage/downloads/GdeSveta_Recurring.apk"
+  echo ""
+  echo "✅ ЧТО ДОБАВЛЕНО:"
+  echo "• Кнопка '📅 Повтор' во вкладке Работа"
+  echo "• Типы повторений:"
+  echo "  - Ежедневно"
+  echo "  - По будням (Пн-Пт)"
+  echo "  - Еженедельно (выбор дней)"
+  echo "  - Ежемесячно"
+  echo "• Дата начала и окончания"
+  echo "• Автоматическое создание событий"
+  echo "• Примеры:"
+  echo "  • Школа: Пн-Пт, 08:00, с 1 сен по 25 мая"
+  echo "  • Танцы: Вт и Чт, 16:00, весь год"
+  echo ""
+  echo "📱 ТЕСТИРОВАНИЕ:"
+  echo "1. Установи GdeSveta_Recurring.apk"
+  echo "2. Открой вкладку 'Работа'"
+  echo "3. Нажми '📅 Повтор'"
+  echo "4. Заполни:"
+  echo "   - Название: 'Школа'"
+  echo "   - Тип: 'По будням (Пн-Пт)'"
+  echo "   - Время: 08:00"
+  echo "   - Дата начала: 01.09.2026"
+  echo "   - Дата окончания: 25.05.2027"
+  echo "5. Сохрани — события создадутся автоматически!"
+  echo "═══════════════════════════════════════════════"
+else
+  echo "❌ Ошибка сборки"
+  cd ..
 fi
-
-echo ""
-echo "🔁 ПРИОРИТЕТ 1 ВЫПОЛНЕН!"
-echo ""
-echo "✅ Добавлены повторяющиеся события:"
-echo "  • Ежедневно"
-echo "  • Еженедельно"
-echo "  • Каждые 2 недели"
-echo "  • Ежемесячно"
-echo ""
-echo "Как работает:"
-echo "  1. Создаёшь запись"
-echo "  2. Включаешь 'Повторять'"
-echo "  3. Выбираешь тип (день/неделя/месяц)"
-echo "  4. Указываешь конец или количество"
-echo "  5. Приложение создаёт серию записей"
-echo ""
-echo "📋 Следующий шаг: Push-уведомления"
