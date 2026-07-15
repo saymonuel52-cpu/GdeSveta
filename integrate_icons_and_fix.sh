@@ -1,3 +1,152 @@
+#!/bin/bash
+echo "🎨 ИНТЕГРАЦИЯ ИКОНОК И ИСПРАВЛЕНИЕ ПРИЛОЖЕНИЯ..."
+
+# 1. Создаём папку для иконок
+mkdir -p icons
+mkdir -p icons/light
+mkdir -p icons/dark
+
+echo "✅ Папки созданы"
+
+# 2. Создаём CSS с новыми стилями иконок
+cat > styles/icons.css << 'ICONS_CSS'
+/* === ИКОНКИ И НАВИГАЦИЯ === */
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 70px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.nav-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(255, 107, 157, 0.25);
+}
+
+.nav-item.active {
+  background: linear-gradient(135deg, #ff6b9d, #ff8e53);
+  box-shadow: 0 4px 16px rgba(255, 107, 157, 0.4);
+}
+
+.nav-item.active .nav-icon {
+  filter: brightness(0) invert(1);
+}
+
+.nav-item.active .nav-label {
+  color: white;
+  font-weight: 600;
+}
+
+.nav-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  transition: transform 0.2s;
+}
+
+.nav-item:hover .nav-icon {
+  transform: scale(1.1);
+}
+
+.nav-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+  text-align: center;
+  transition: color 0.2s;
+}
+
+/* Floating Action Button */
+.fab {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #ff6b9d, #ff8e53);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(255, 107, 157, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+}
+
+.fab:hover {
+  transform: translateX(-50%) scale(1.1) rotate(90deg);
+  box-shadow: 0 8px 32px rgba(255, 107, 157, 0.5);
+}
+
+.fab:active {
+  transform: translateX(-50%) scale(0.95);
+}
+
+.fab .material-icons-round,
+.fab .icon-plus {
+  font-size: 32px;
+  color: white;
+  font-weight: 300;
+}
+
+/* Theme Toggle */
+.theme-toggle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+}
+
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(180deg);
+}
+
+.theme-icon {
+  width: 24px;
+  height: 24px;
+  transition: opacity 0.3s;
+}
+
+/* Dark theme adjustments */
+body.dark-theme .nav-item {
+  background: rgba(30, 41, 59, 0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-theme .nav-item.active {
+  background: linear-gradient(135deg, #ff6b9d, #ff8e53);
+}
+
+body.dark-theme .nav-label {
+  color: #94a3b8;
+}
+ICONS_CSS
+
+echo "✅ CSS для иконок создан"
+
+# 3. Обновляем index.html с новыми иконками
+cat > index.html << 'INDEX_HTML'
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -131,3 +280,19 @@
   <script src="app.js"></script>
 </body>
 </html>
+INDEX_HTML
+
+echo "✅ index.html обновлён"
+
+# 4. Git + сборка
+echo ""
+echo "🔄 Отправка на GitHub..."
+
+git add .
+git commit -m "feat: Интеграция новых иконок и улучшенный UI"
+git push origin main
+
+echo "✅ Готово! Теперь собери APK:"
+echo "cd ~/GdeSvet"
+echo "./fix_and_build.sh"
+

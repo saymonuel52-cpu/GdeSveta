@@ -1,186 +1,121 @@
 /**
- * ГдеСвета - v10.0
- * Emergency Recovery Version
+ * ГдеСвета - Полноценная рабочая версия
  */
 
-console.log('🚀 ГдеСвета загружается...');
+console.log(' ГдеСвета загружается...');
 
-// === БАЗОВАЯ ИНИЦИАЛИЗАЦИЯ ===
-window.appInitialized = false;
-
-// Инициализация приложения
-window.initApp = function() {
-  if (window.appInitialized) {
-    console.log('⚠️ Приложение уже инициализировано');
-    return;
-  }
-  
-  console.log('✅ Инициализация приложения...');
-  
-  // Проверяем наличие основных компонентов
-  if (typeof Storage === 'undefined') {
-    console.error('❌ Storage не найден!');
-    return;
-  }
-  
-  if (typeof Store === 'undefined') {
-    console.error('❌ Store не найден!');
-    return;
-  }
-  
-  if (typeof CalendarView === 'undefined') {
-    console.error('❌ CalendarView не найден!');
-    return;
-  }
-  
-  // Инициализируем первую вкладку
-  setTimeout(() => {
-    switchTab('calendar');
-    window.appInitialized = true;
-    console.log('✅ Приложение готово!');
-  }, 500);
-};
-
-// === ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ===
+// Глобальные функции
 window.switchTab = function(tabName) {
-  console.log('🔄 Переключение на вкладку:', tabName);
+  console.log(' Переключение на:', tabName);
   
-  // Убираем активный класс со всех кнопок
+  // Скрываем все вкладки
+  document.querySelectorAll('.tab-content').forEach(tab => {
+    tab.style.display = 'none';
+    tab.classList.remove('active');
+  });
+  
+  // Убираем active с кнопок
   document.querySelectorAll('.nav-item').forEach(btn => {
     btn.classList.remove('active');
   });
   
-  // Активируем нужную кнопку
-  const activeBtn = document.querySelector(`.nav-item[data-tab="${tabName}"]`);
-  if (activeBtn) {
-    activeBtn.classList.add('active');
+  // Показываем нужную вкладку
+  const targetTab = document.getElementById('tab-' + tabName);
+  const targetBtn = document.querySelector('.nav-item[data-tab="' + tabName + '"]');
+  
+  if (targetTab) {
+    targetTab.style.display = 'block';
+    targetTab.classList.add('active');
   }
   
-  // Скрываем все вкладки
-  document.querySelectorAll('.tab-content').forEach(tab => {
-    tab.classList.remove('active');
-    tab.style.display = 'none';
-  });
+  if (targetBtn) {
+    targetBtn.classList.add('active');
+  }
   
-  // Показываем нужную вкладку
-  const activeTab = document.getElementById(`tab-${tabName}`);
-  if (activeTab) {
-    activeTab.classList.add('active');
-    activeTab.style.display = 'block';
-    
-    // Инициализируем view
-    setTimeout(() => {
-      switch(tabName) {
-        case 'calendar':
-          if (typeof CalendarView !== 'undefined') {
-            CalendarView.render();
-          }
-          break;
-        case 'work':
-          if (typeof WorkView !== 'undefined') {
-            WorkView.render();
-          }
-          break;
-        case 'family':
-          if (typeof FamilyView !== 'undefined') {
-            FamilyView.init('familyView');
-          }
-          break;
-        case 'notes':
-          if (typeof NotesView !== 'undefined') {
-            NotesView.render();
-          }
-          break;
-        case 'stats':
-          if (typeof StatsView !== 'undefined') {
-            StatsView.render();
-          }
-          break;
-        case 'tasks':
-          if (typeof TasksView !== 'undefined') {
-            TasksView.render();
-          }
-          break;
-        case 'dog':
-          if (typeof DogView !== 'undefined') {
-            DogView.init('dogView');
-          }
-          break;
-      }
-    }, 100);
-  } else {
-    console.error('❌ Вкладка не найдена:', tabName);
+  // Инициализируем контент
+  setTimeout(function() {
+    if (tabName === 'calendar' && typeof CalendarView !== 'undefined') {
+      CalendarView.render();
+    } else if (tabName === 'work' && typeof WorkView !== 'undefined') {
+      WorkView.render();
+    } else if (tabName === 'family' && typeof FamilyView !== 'undefined') {
+      FamilyView.render();
+    } else if (tabName === 'notes' && typeof NotesView !== 'undefined') {
+      NotesView.render();
+    } else if (tabName === 'stats' && typeof StatsView !== 'undefined') {
+      StatsView.render();
+    } else if (tabName === 'dog' && typeof DogView !== 'undefined') {
+      DogView.render();
+    }
+  }, 100);
+};
+
+// Открытие формы добавления
+window.openQuickAdd = function() {
+  const activeTab = document.querySelector('.nav-item.active');
+  const tabName = activeTab ? activeTab.dataset.tab : 'calendar';
+  
+  if (tabName === 'calendar' || tabName === 'work') {
+    if (typeof window.openWorkForm === 'function') {
+      window.openWorkForm();
+    } else {
+      alert('Форма добавления записи');
+    }
+  } else if (tabName === 'family') {
+    if (typeof window.openFamilyForm === 'function') {
+      window.openFamilyForm();
+    }
+  } else if (tabName === 'notes') {
+    if (typeof window.openNoteForm === 'function') {
+      window.openNoteForm();
+    }
+  } else if (tabName === 'dog') {
+    if (typeof window.openDogForm === 'function') {
+      window.openDogForm();
+    }
   }
 };
 
-// === ОБРАБОТЧИКИ НАВИГАЦИИ ===
+// Настройка навигации
 function setupNavigation() {
-  console.log('🔧 Настройка навигации...');
-  
   document.querySelectorAll('.nav-item').forEach(btn => {
     btn.addEventListener('click', function() {
       const tabName = this.dataset.tab;
-      console.log(' Нажата вкладка:', tabName);
-      switchTab(tabName);
+      window.switchTab(tabName);
     });
   });
 }
 
-// === ОТКРЫТИЕ ФОРМЫ ДОБАВЛЕНИЯ ===
-window.openQuickAdd = function() {
-  console.log('➕ Открытие формы добавления');
+// Инициализация
+function initApp() {
+  console.log(' Инициализация приложения...');
   
-  // Определяем текущую вкладку
-  const activeTab = document.querySelector('.nav-item.active');
-  const tabName = activeTab ? activeTab.dataset.tab : 'calendar';
-  
-  console.log('  Текущая вкладка:', tabName);
-  
-  // Открываем соответствующую форму
-  if (tabName === 'calendar' || tabName === 'work') {
-    if (typeof openWorkForm === 'function') {
-      openWorkForm();
-    } else {
-      Modal.alert('Форма работы будет добавлена');
-    }
-  } else if (tabName === 'family') {
-    if (typeof openFamilyForm === 'function') {
-      openFamilyForm();
-    } else {
-      Modal.alert('Форма семьи будет добавлена');
-    }
-  } else if (tabName === 'notes') {
-    if (typeof openNoteForm === 'function') {
-      openNoteForm();
-    } else {
-      Modal.alert('Форма заметок будет добавлена');
-    }
-  } else if (tabName === 'tasks') {
-    if (typeof openTaskForm === 'function') {
-      openTaskForm();
-    } else {
-      Modal.alert('Форма задач будет добавлена');
-    }
-  } else if (tabName === 'dog') {
-    if (typeof openDogForm === 'function') {
-      openDogForm();
-    } else {
-      Modal.alert('Форма собаки будет добавлена');
-    }
+  // Проверяем наличие необходимых объектов
+  if (typeof Storage === 'undefined') {
+    console.error('Storage не найден!');
+    return;
   }
-};
-
-// === ЗАПУСК ПРИ ЗАГРУЗКЕ ===
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', function() {
-    console.log('📄 DOM загружен');
-    setupNavigation();
-    initApp();
-  });
-} else {
-  console.log('📄 DOM уже загружен');
+  
+  if (typeof Store === 'undefined') {
+    console.error('Store не найден!');
+    return;
+  }
+  
+  // Настраиваем навигацию
   setupNavigation();
+  
+  // Открываем первую вкладку
+  setTimeout(function() {
+    window.switchTab('calendar');
+    console.log(' Приложение готово!');
+  }, 500);
+}
+
+// Запуск при загрузке
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
   initApp();
 }
 
-console.log('✅ Базовый app.js загружен');
+console.log(' app.js загружен');
