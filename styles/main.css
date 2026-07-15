@@ -1891,3 +1891,40 @@ header {
   font-size: 11px;
   font-weight: 600;
 }
+
+/* Приоритеты событий */
+.priority-critical {
+  border-left: 4px solid #ef4444 !important;
+}
+
+.priority-important {
+  border-left: 4px solid #f59e0b !important;
+}
+
+.priority-flexible {
+  border-left: 4px solid #10b981 !important;
+}
+
+.priority-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.priority-badge.critical {
+  background: #ef4444;
+  color: white;
+}
+
+.priority-badge.important {
+  background: #f59e0b;
+  color: white;
+}
+
+.priority-badge.flexible {
+  background: #10b981;
+  color: white;
+}
