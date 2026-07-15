@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#ff6b9d">
+  <title>ГдеСвета — Умный планировщик</title>
+  
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/icons.css">
+  <link rel="manifest" href="manifest.json">
+  
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="modern-header">
+    <div class="header-content">
+      <div class="logo">
+        <span class="logo-icon"></span>
+        <div class="logo-text">
+          <h1>ГдеСвета</h1>
+          <span class="date" id="currentDate">17 Июля</span>
+        </div>
+      </div>
+      
+      <button class="theme-toggle" id="themeToggle" title="Сменить тему">
+        <span class="material-icons-round" id="themeIcon">dark_mode</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Navigation -->
+  <nav class="modern-nav">
+    <button class="nav-item active" data-tab="calendar">
+      <span class="material-icons-round nav-icon">calendar_today</span>
+      <span class="nav-label">Календарь</span>
+    </button>
+    <button class="nav-item" data-tab="work">
+      <span class="material-icons-round nav-icon">work</span>
+      <span class="nav-label">Работа</span>
+    </button>
+    <button class="nav-item" data-tab="family">
+      <span class="material-icons-round nav-icon">family_restroom</span>
+      <span class="nav-label">Семья</span>
+    </button>
+    <button class="nav-item" data-tab="tasks">
+      <span class="material-icons-round nav-icon">check_circle</span>
+      <span class="nav-label">Задачи</span>
+    </button>
+    <button class="nav-item" data-tab="notes">
+      <span class="material-icons-round nav-icon">note_alt</span>
+      <span class="nav-label">Заметки</span>
+    </button>
+    <button class="nav-item" data-tab="stats">
+      <span class="material-icons-round nav-icon">insights</span>
+      <span class="nav-label">Статистика</span>
+    </button>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="modern-main">
+    <div id="tab-calendar" class="tab-content active">
+      <div id="calendarView"></div>
+    </div>
+    
+    <div id="tab-work" class="tab-content">
+      <div class="tab-header">
+        <h2><span class="material-icons-round">work</span> Работа</h2>
+      </div>
+      <div id="workView"></div>
+    </div>
+    
+    <div id="tab-family" class="tab-content">
+      <div class="tab-header">
+        <h2><span class="material-icons-round">family_restroom</span> Семья</h2>
+      </div>
+      <div id="familyView"></div>
+    </div>
+    
+    <div id="tab-tasks" class="tab-content">
+      <div class="tab-header">
+        <h2><span class="material-icons-round">check_circle</span> Задачи</h2>
+      </div>
+      <div id="tasksView"></div>
+    </div>
+    
+    <div id="tab-notes" class="tab-content">
+      <div class="tab-header">
+        <h2><span class="material-icons-round">note_alt</span> Заметки</h2>
+      </div>
+      <div id="notesView"></div>
+    </div>
+    
+    <div id="tab-stats" class="tab-content">
+      <div class="tab-header">
+        <h2><span class="material-icons-round">insights</span> Статистика</h2>
+      </div>
+      <div id="statsView"></div>
+    </div>
+  </main>
+
+  <!-- Floating Action Button -->
+  <button class="fab" onclick="openQuickAdd()" title="Добавить">
+    <span class="material-icons-round" style="font-size: 32px;">add</span>
+  </button>
+
+  <!-- Scripts -->
+  <script src="src/core/storage.js"></script>
+  <script src="src/core/events.js"></script>
+  <script src="src/core/utils.js"></script>
+  <script src="src/core/store.js"></script>
+  
+  <script src="src/models/Entry.js"></script>
+  <script src="src/models/Note.js"></script>
+  <script src="src/models/PriceItem.js"></script>
+  <script src="src/models/FamilyMember.js"></script>
+  
+  <script src="src/services/EntryService.js"></script>
+  <script src="src/services/NoteService.js"></script>
+  <script src="src/services/PriceService.js"></script>
+  <script src="src/services/FamilyService.js"></script>
+  
+  <script src="src/views/CalendarView.js"></script>
+  <script src="src/views/WorkView.js"></script>
+  <script src="src/views/FamilyView.js"></script>
+  <script src="src/views/NotesView.js"></script>
+  <script src="src/views/StatsView.js"></script>
+  <script src="src/views/TasksView.js"></script>
+  
+  <script src="app.js"></script>
+</body>
+</html>
