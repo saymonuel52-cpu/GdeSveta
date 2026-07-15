@@ -819,3 +819,110 @@ window.handleWorkSubmit = function(e) {
   _originalHandleWorkSubmit(e);
   return false;
 };
+
+// === ПРОСТЫЕ НАСТРОЙКИ РАБОЧЕГО ВРЕМЕНИ (встроено) ===
+window.openScheduleSettings = function() {
+  console.log('🔧 openScheduleSettings вызван!');
+  
+  // Получаем текущие настройки или используем значения по умолчанию
+  const settings = JSON.parse(Storage.get('scheduleRules', '{"workDays":[1,2,3,4,5,6],"workStart":"09:00","workEnd":"20:00","lunchBreak":{"enabled":false,"start":"13:00","end":"14:00"},"bufferTime":10,"maxBookingsPerDay":8}'));
+  
+  const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+  
+  const content = `
+    <form id="scheduleForm" onsubmit="return window.saveScheduleSettings(event)">
+      <label style="display:block;margin-bottom:10px;font-weight:600;">Рабочие дни (отметьте галочкой):</label>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:20px;">
+        ${[0,1,2,3,4,5,6].map(day => `
+          <label style="display:flex;flex-direction:column;align-items:center;padding:12px;background:${settings.workDays.includes(day) ? '#ff6b9d' : '#f0f0f0'};border-radius:10px;cursor:pointer;transition:all 0.2s;">
+            <input type="checkbox" name="workDays" value="${day}" 
+              ${settings.workDays.includes(day) ? 'checked' : ''} 
+              style="width:20px;height:20px;margin-bottom:8px;"
+              onchange="this.parentElement.style.background=this.checked?'#ff6b9d':'#f0f0f0'">
+            <span style="font-size:14px;font-weight:600;">${dayNames[day]}</span>
+          </label>
+        `).join('')}
+      </div>
+      
+      <label style="display:block;margin-bottom:5px;font-weight:600;">Начало рабочего дня:</label>
+      <input type="time" id="workStart" value="${settings.workStart}" required 
+        style="width:100%;padding:12px;margin-bottom:15px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+      
+      <label style="display:block;margin-bottom:5px;font-weight:600;">Конец рабочего дня:</label>
+      <input type="time" id="workEnd" value="${settings.workEnd}" required 
+        style="width:100%;padding:12px;margin-bottom:15px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+      
+      <label style="display:flex;align-items:center;gap:10px;margin:15px 0;padding:15px;background:#f8f8f8;border-radius:10px;cursor:pointer;">
+        <input type="checkbox" id="lunchEnabled" 
+          ${settings.lunchBreak.enabled ? 'checked' : ''}
+          onchange="document.getElementById('lunchSettings').style.display = this.checked ? 'block' : 'none'"
+          style="width:22px;height:22px;">
+        <span style="font-weight:600;font-size:16px;">🍽️ Обеденный перерыв</span>
+      </label>
+      
+      <div id="lunchSettings" style="display: ${settings.lunchBreak.enabled ? 'block' : 'none'};margin-bottom:15px;">
+        <label style="display:block;margin-bottom:5px;">Начало обеда:</label>
+        <input type="time" id="lunchStart" value="${settings.lunchBreak.start}" 
+          style="width:100%;padding:12px;margin-bottom:10px;border:2px solid #e0e0e0;border-radius:10px;">
+        
+        <label style="display:block;margin-bottom:5px;">Конец обеда:</label>
+        <input type="time" id="lunchEnd" value="${settings.lunchBreak.end}" 
+          style="width:100%;padding:12px;margin-bottom:10px;border:2px solid #e0e0e0;border-radius:10px;">
+      </div>
+      
+      <label style="display:block;margin-bottom:5px;font-weight:600;">⏱️ Буфер между записями (минут):</label>
+      <input type="number" id="bufferTime" value="${settings.bufferTime}" min="0" max="60" 
+        style="width:100%;padding:12px;margin-bottom:15px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+      
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button type="submit" 
+          style="flex:1;padding:15px;background:linear-gradient(135deg,#ff6b9d,#ff8e53);color:white;border:none;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 12px rgba(255,107,157,0.4);">
+          💾 Сохранить настройки
+        </button>
+        <button type="button" onclick="Modal.close()" 
+          style="flex:1;padding:15px;background:#e0e0e0;color:#333;border:none;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer;">
+          Отмена
+        </button>
+      </div>
+    </form>
+  `;
+  
+  Modal.form({ title: '⚙️ Настройки рабочего времени', content });
+};
+
+window.saveScheduleSettings = function(e) {
+  e.preventDefault();
+  console.log('💾 Сохранение настроек...');
+  
+  const workDays = Array.from(document.querySelectorAll('input[name="workDays"]:checked'))
+    .map(cb => parseInt(cb.value));
+  
+  if (workDays.length === 0) {
+    Modal.alert('❌ Выберите хотя бы один рабочий день!');
+    return false;
+  }
+  
+  const settings = {
+    workDays,
+    workStart: document.getElementById('workStart').value,
+    workEnd: document.getElementById('workEnd').value,
+    lunchBreak: {
+      enabled: document.getElementById('lunchEnabled').checked,
+      start: document.getElementById('lunchStart').value,
+      end: document.getElementById('lunchEnd').value
+    },
+    bufferTime: parseInt(document.getElementById('bufferTime').value),
+    maxBookingsPerDay: 8
+  };
+  
+  Storage.set('scheduleRules', JSON.stringify(settings));
+  Modal.close();
+  
+  setTimeout(() => {
+    Modal.alert('✅ Настройки рабочего времени сохранены!\n\nТеперь при добавлении записей система будет проверять:\n• Рабочие дни\n• Рабочие часы\n• Обеденный перерыв\n• Буфер между записями');
+  }, 100);
+  
+  return false;
+};
+
+console.log('✅ Функции настроек загружены');
