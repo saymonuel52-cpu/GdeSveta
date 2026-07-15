@@ -1590,7 +1590,7 @@ window.openDayTimeline = function(date = null) {
     if (slot.type === 'free') {
       html += `
         <div onclick="bookFreeSlot('${date}', '${startStr}', ${duration})" 
-             style="background:linear-gradient(135deg,#10b981,#34d399);color:white;padding:15px;margin:8px 0;border-radius:12px;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px rgba(16,185,129,0.3);"
+             style="background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 4px 12px rgba(5,150,105,0.5);border:2px solid #047857;color:white;padding:15px;margin:8px 0;border-radius:12px;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px rgba(16,185,129,0.3);"
              onmouseover="this.style.transform='scale(1.02)'"
              onmouseout="this.style.transform='scale(1)'">
           <div style="font-size:18px;font-weight:700;margin-bottom:5px;">✅ Свободно: ${startStr} - ${endStr}</div>
@@ -1659,7 +1659,7 @@ WorkView.render = function() {
       const btn = document.createElement('button');
       btn.id = 'freeSlotsBtn';
       btn.textContent = '🔍 Свободные окна';
-      btn.style.cssText = 'width:100%;padding:15px;margin:15px 0;background:linear-gradient(135deg,#10b981,#34d399);color:white;border:none;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.4);';
+      btn.style.cssText = 'width:100%;padding:15px;margin:15px 0;background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 4px 12px rgba(5,150,105,0.5);border:2px solid #047857;color:white;border:none;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.4);';
       btn.onclick = () => openDayTimeline();
       workView.insertBefore(btn, workView.firstChild);
     }
@@ -1667,3 +1667,161 @@ WorkView.render = function() {
 };
 
 console.log('✅ Визуальный поиск свободных окон загружен');
+
+// === ФУНКЦИИ ДЛЯ ВКЛАДКИ СОБАКА ===
+
+// Открыть форму собаки
+window.openDogForm = function(id = null) {
+  const eventTypes = Object.entries(DogService.eventTypes).map(([key, val]) => 
+    `<option value="${val.label}">${val.label}</option>`
+  ).join('');
+  
+  const content = `
+    <form id="dogForm" onsubmit="return saveDogEvent(event, ${id})">
+      <label>Название события</label>
+      <input type="text" id="dogName" placeholder="Напр. Стрижка" required 
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;">
+      
+      <label>Тип события</label>
+      <select id="dogType" required 
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;">
+        ${eventTypes}
+      </select>
+      
+      <label>Дата</label>
+      <input type="date" id="dogDate" required 
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;">
+      
+      <label>Время</label>
+      <input type="time" id="dogTime" required 
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;">
+      
+      <label>Длительность (минут)</label>
+      <input type="number" id="dogDuration" value="60" min="10" max="300" 
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;">
+      
+      <label>📍 Адрес / Место</label>
+      <input type="text" id="dogAddress" placeholder="Напр. Грумерская 'Лапки', ул. Пушкина 10" 
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;">
+      
+      <label>💬 Примечания</label>
+      <textarea id="dogNotes" placeholder="Напр. Боится уколов, взять любимый мячик" rows="3" 
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;"></textarea>
+      
+      <label> Стоимость (₽)</label>
+      <input type="number" id="dogPrice" placeholder="Напр. 2000" min="0" 
+        style="width:100%;padding:12px;margin:5px 0 15px 0;border:2px solid #e0e0e0;border-radius:10px;">
+      
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button type="submit" 
+          style="flex:1;padding:15px;background:linear-gradient(135deg,#f59e0b,#fbbf24);color:white;border:none;border-radius:12px;font-weight:700;cursor:pointer;">
+          💾 Сохранить
+        </button>
+        <button type="button" onclick="Modal.close()" 
+          style="flex:1;padding:15px;background:#e0e0e0;color:#333;border:none;border-radius:12px;font-weight:700;cursor:pointer;">
+          Отмена
+        </button>
+      </div>
+    </form>
+  `;
+  
+  Modal.form({ title: id ? '✏️ Редактировать событие' : '🐕 Добавить событие', content });
+  
+  // Установить сегодняшнюю дату по умолчанию
+  setTimeout(() => {
+    document.getElementById('dogDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('dogTime').value = '10:00';
+  }, 100);
+};
+
+// Сохранить событие собаки
+window.saveDogEvent = function(e, id) {
+  e.preventDefault();
+  
+  const data = {
+    name: document.getElementById('dogName').value,
+    service: document.getElementById('dogType').value,
+    date: document.getElementById('dogDate').value,
+    time: document.getElementById('dogTime').value,
+    duration: parseInt(document.getElementById('dogDuration').value),
+    zone: document.getElementById('dogAddress').value,
+    notes: document.getElementById('dogNotes').value,
+    price: parseInt(document.getElementById('dogPrice').value || 0),
+    status: 'new'
+  };
+  
+  if (id) {
+    DogService.update(id, data);
+  } else {
+    DogService.create(data);
+  }
+  
+  Modal.close();
+  Modal.alert(id ? '✅ Событие обновлено!' : '✅ Событие создано!');
+  setTimeout(() => {
+    if (typeof DogView !== 'undefined') DogView.render();
+    if (typeof CalendarView !== 'undefined') CalendarView.render();
+  }, 200);
+  
+  return false;
+};
+
+// Редактировать событие собаки
+window.editDogEvent = function(id) {
+  const event = Store.getEntries().find(e => e.id === id);
+  if (!event) return;
+  
+  openDogForm(id);
+  
+  setTimeout(() => {
+    document.getElementById('dogName').value = event.name || '';
+    document.getElementById('dogType').value = event.service || '';
+    document.getElementById('dogDate').value = event.date;
+    document.getElementById('dogTime').value = event.time;
+    document.getElementById('dogDuration').value = event.duration;
+    document.getElementById('dogAddress').value = event.zone || '';
+    document.getElementById('dogNotes').value = event.notes || '';
+    document.getElementById('dogPrice').value = event.price || 0;
+  }, 100);
+};
+
+// Удалить событие собаки
+window.deleteDogEvent = function(id) {
+  Modal.confirm('Удалить это событие?', () => {
+    DogService.delete(id);
+    Modal.close();
+    Modal.alert('✅ Событие удалено!');
+    setTimeout(() => {
+      if (typeof DogView !== 'undefined') DogView.render();
+      if (typeof CalendarView !== 'undefined') CalendarView.render();
+    }, 200);
+  });
+};
+
+// Переключение карточки собаки
+window.toggleDogCard = function(id) {
+  const details = document.getElementById(`dog-details-${id}`);
+  const actions = document.getElementById(`dog-actions-${id}`);
+  
+  if (details && actions) {
+    const isHidden = details.style.display === 'none';
+    details.style.display = isHidden ? 'block' : 'none';
+    actions.style.display = isHidden ? 'block' : 'none';
+  }
+};
+
+// Инициализация вкладки собаки при переключении
+const _origSwitchTab = window.switchTab;
+window.switchTab = function(tabName) {
+  if (_origSwitchTab) _origSwitchTab(tabName);
+  
+  if (tabName === 'dog') {
+    setTimeout(() => {
+      if (typeof DogView !== 'undefined') {
+        DogView.init('dogView');
+      }
+    }, 100);
+  }
+};
+
+console.log('✅ Функции вкладки "Собака" загружены');
