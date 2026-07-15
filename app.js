@@ -1590,7 +1590,7 @@ window.openDayTimeline = function(date = null) {
     if (slot.type === 'free') {
       html += `
         <div onclick="bookFreeSlot('${date}', '${startStr}', ${duration})" 
-             style="background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 4px 12px rgba(5,150,105,0.5);border:2px solid #047857;color:white;padding:15px;margin:8px 0;border-radius:12px;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px rgba(16,185,129,0.3);"
+             style="background:linear-gradient(135deg,#059669,#10b981);color:white;border:none;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 12px rgba(5,150,105,0.4);border:2px solid #047857;color:white;padding:15px;margin:8px 0;border-radius:12px;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px rgba(16,185,129,0.3);"
              onmouseover="this.style.transform='scale(1.02)'"
              onmouseout="this.style.transform='scale(1)'">
           <div style="font-size:18px;font-weight:700;margin-bottom:5px;">✅ Свободно: ${startStr} - ${endStr}</div>
@@ -1659,7 +1659,7 @@ WorkView.render = function() {
       const btn = document.createElement('button');
       btn.id = 'freeSlotsBtn';
       btn.textContent = '🔍 Свободные окна';
-      btn.style.cssText = 'width:100%;padding:15px;margin:15px 0;background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 4px 12px rgba(5,150,105,0.5);border:2px solid #047857;color:white;border:none;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.4);';
+      btn.style.cssText = 'width:100%;padding:15px;margin:15px 0;background:linear-gradient(135deg,#059669,#10b981);color:white;border:none;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 12px rgba(5,150,105,0.4);border:2px solid #047857;color:white;border:none;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.4);';
       btn.onclick = () => openDayTimeline();
       workView.insertBefore(btn, workView.firstChild);
     }

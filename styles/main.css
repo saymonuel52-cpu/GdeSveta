@@ -1973,3 +1973,46 @@ header {
 .nav-item[data-tab="dog"].active .material-icons-round {
   color: white;
 }
+
+/* ИСПРАВЛЕНИЕ: Кнопки фильтров должны быть видны на светлой теме */
+.family-filters button,
+.dog-filters button,
+.note-filters button {
+  background: #ffffff !important;
+  color: #333333 !important;
+  border: 2px solid #e0e0e0 !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+.family-filters button:hover,
+.dog-filters button:hover,
+.note-filters button:hover {
+  background: #f5f5f5 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+}
+
+.family-filters button.active,
+.dog-filters button.active,
+.note-filters button.active {
+  background: linear-gradient(135deg, #ff6b9d, #ff8e53) !important;
+  color: white !important;
+  border-color: #ff6b9d !important;
+}
+
+/* Для тёмной темы оставляем как было */
+body.dark-theme .family-filters button,
+body.dark-theme .dog-filters button,
+body.dark-theme .note-filters button {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+body.dark-theme .family-filters button.active,
+body.dark-theme .dog-filters button.active,
+body.dark-theme .note-filters button.active {
+  background: linear-gradient(135deg, #ff6b9d, #ff8e53) !important;
+  color: white !important;
+}
