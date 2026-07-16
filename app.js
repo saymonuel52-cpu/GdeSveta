@@ -354,3 +354,154 @@ if (document.readyState === 'loading') {
 }
 
 console.log('✅ app.js загружен и готов к работе');
+
+// === ФОРМА ДОБАВЛЕНИЯ ЗАПИСИ ===
+window.openWorkForm = function(entryId = null, presetDate = null) {
+  console.log('📝 Открытие формы записи');
+  
+  const isEdit = entryId !== null;
+  let entry = null;
+  
+  if (isEdit) {
+    entry = Store.getEntries().find(e => e.id === entryId);
+  }
+  
+  const dateValue = presetDate || (entry ? entry.date : new Date().toISOString().split('T')[0]);
+  const timeValue = entry ? entry.time : '10:00';
+  const durationValue = entry ? entry.duration : 60;
+  const nameValue = entry ? entry.name : '';
+  const serviceValue = entry ? entry.service : '';
+  const priceValue = entry ? entry.price : '';
+  const phoneValue = entry ? entry.phone : '';
+  const notesValue = entry ? entry.notes : '';
+  
+  const html = `
+    <div style="padding:20px;">
+      <h3 style="margin:0 0 20px 0;color:#1e293b;">${isEdit ? '✏️ Редактировать запись' : '➕ Новая запись'}</h3>
+      
+      <form id="workEntryForm" onsubmit="return saveWorkEntry(event, ${entryId})">
+        <label style="display:block;margin-bottom:5px;font-weight:600;color:#1e293b;">Имя клиента *</label>
+        <input type="text" id="entryName" value="${nameValue}" required 
+          style="width:100%;padding:12px;margin-bottom:15px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+        
+        <label style="display:block;margin-bottom:5px;font-weight:600;color:#1e293b;">Телефон</label>
+        <input type="tel" id="entryPhone" value="${phoneValue}" 
+          style="width:100%;padding:12px;margin-bottom:15px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;">
+          <div>
+            <label style="display:block;margin-bottom:5px;font-weight:600;color:#1e293b;">Дата *</label>
+            <input type="date" id="entryDate" value="${dateValue}" required 
+              style="width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:5px;font-weight:600;color:#1e293b;">Время *</label>
+            <input type="time" id="entryTime" value="${timeValue}" required 
+              style="width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+          </div>
+        </div>
+        
+        <label style="display:block;margin-bottom:5px;font-weight:600;color:#1e293b;">Длительность (мин) *</label>
+        <input type="number" id="entryDuration" value="${durationValue}" min="15" max="480" required 
+          style="width:100%;padding:12px;margin-bottom:15px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+        
+        <label style="display:block;margin-bottom:5px;font-weight:600;color:#1e293b;">Услуга</label>
+        <input type="text" id="entryService" value="${serviceValue}" 
+          style="width:100%;padding:12px;margin-bottom:15px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+        
+        <label style="display:block;margin-bottom:5px;font-weight:600;color:#1e293b;">Цена (₽)</label>
+        <input type="number" id="entryPrice" value="${priceValue}" min="0" 
+          style="width:100%;padding:12px;margin-bottom:15px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">
+        
+        <label style="display:block;margin-bottom:5px;font-weight:600;color:#1e293b;">Заметки</label>
+        <textarea id="entryNotes" rows="3" 
+          style="width:100%;padding:12px;margin-bottom:20px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;">${notesValue}</textarea>
+        
+        <div style="display:flex;gap:10px;">
+          <button type="submit" 
+            style="flex:1;padding:15px;background:linear-gradient(135deg,#ff6b9d,#ff8e53);color:white;border:none;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer;">
+            💾 Сохранить
+          </button>
+          <button type="button" onclick="closeModal()" 
+            style="flex:1;padding:15px;background:#e0e0e0;color:#333;border:none;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer;">
+            Отмена
+          </button>
+        </div>
+      </form>
+    </div>
+  `;
+  
+  showModal(html);
+};
+
+// Сохранение записи
+window.saveWorkEntry = function(e, entryId) {
+  e.preventDefault();
+  console.log('💾 Сохранение записи...');
+  
+  const entryData = {
+    name: document.getElementById('entryName').value,
+    phone: document.getElementById('entryPhone').value,
+    date: document.getElementById('entryDate').value,
+    time: document.getElementById('entryTime').value,
+    duration: parseInt(document.getElementById('entryDuration').value),
+    service: document.getElementById('entryService').value,
+    price: parseInt(document.getElementById('entryPrice').value) || 0,
+    notes: document.getElementById('entryNotes').value,
+    category: 'work',
+    status: 'new'
+  };
+  
+  if (entryId) {
+    // Редактирование
+    Store.updateEntry(entryId, entryData);
+    console.log('✅ Запись обновлена:', entryId);
+  } else {
+    // Новая запись
+    Store.addEntry(entryData);
+    console.log('✅ Запись создана');
+  }
+  
+  closeModal();
+  
+  // Обновляем текущую вкладку
+  setTimeout(() => {
+    const currentTab = AppState.currentTab;
+    if (currentTab === 'calendar') {
+      CalendarView.render();
+    } else if (currentTab === 'work') {
+      WorkView.render();
+    }
+  }, 200);
+  
+  return false;
+};
+
+// Модальное окно
+window.showModal = function(content) {
+  const modal = document.createElement('div');
+  modal.id = 'modalOverlay';
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = 'background:white;border-radius:20px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3);';
+  modalContent.innerHTML = content;
+  
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      closeModal();
+    }
+  });
+};
+
+window.closeModal = function() {
+  const modal = document.getElementById('modalOverlay');
+  if (modal) {
+    modal.remove();
+  }
+};
+
+console.log('✅ Форма добавления записей загружена');
