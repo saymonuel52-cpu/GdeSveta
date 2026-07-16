@@ -1,121 +1,356 @@
 /**
- * ГдеСвета - Полноценная рабочая версия
+ * ГдеСвета v11.0 - Полная пересборка
+ * Архитектура: Модульная, без конфликтов
  */
 
-console.log(' ГдеСвета загружается...');
+console.log('🚀 ГдеСвета загружается...');
 
-// Глобальные функции
-window.switchTab = function(tabName) {
-  console.log(' Переключение на:', tabName);
+// ============================================
+// ГЛОБАЛЬНОЕ СОСТОЯНИЕ
+// ============================================
+window.AppState = {
+  currentTab: 'calendar',
+  isInitialized: false
+};
+
+// ============================================
+// ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
+// ============================================
+function initApp() {
+  if (AppState.isInitialized) {
+    console.log('⚠️ Приложение уже инициализировано');
+    return;
+  }
+
+  console.log('✅ Инициализация...');
   
-  // Скрываем все вкладки
+  // Проверяем наличие необходимых модулей
+  if (typeof Storage === 'undefined') {
+    console.error('❌ Storage не найден!');
+    return;
+  }
+  
+  if (typeof Store === 'undefined') {
+    console.error('❌ Store не найден!');
+    return;
+  }
+
+  // Инициализация завершена
+  AppState.isInitialized = true;
+  console.log('✅ Приложение готово!');
+  
+  // Открываем первую вкладку
+  setTimeout(() => {
+    switchTab('calendar');
+  }, 300);
+}
+
+// ============================================
+// ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
+// ============================================
+window.switchTab = function(tabName) {
+  console.log('🔄 Вкладка:', tabName);
+  
+  AppState.currentTab = tabName;
+  
+  // 1. Убираем active со всех кнопок
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  // 2. Активируем нужную кнопку
+  const activeBtn = document.querySelector(`.nav-item[data-tab="${tabName}"]`);
+  if (activeBtn) {
+    activeBtn.classList.add('active');
+  }
+  
+  // 3. Скрываем все вкладки
   document.querySelectorAll('.tab-content').forEach(tab => {
     tab.style.display = 'none';
     tab.classList.remove('active');
   });
   
-  // Убираем active с кнопок
-  document.querySelectorAll('.nav-item').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  
-  // Показываем нужную вкладку
-  const targetTab = document.getElementById('tab-' + tabName);
-  const targetBtn = document.querySelector('.nav-item[data-tab="' + tabName + '"]');
-  
+  // 4. Показываем нужную вкладку
+  const targetTab = document.getElementById(`tab-${tabName}`);
   if (targetTab) {
     targetTab.style.display = 'block';
     targetTab.classList.add('active');
+    
+    // 5. Инициализируем контент вкладки
+    setTimeout(() => {
+      renderTabContent(tabName);
+    }, 100);
+  } else {
+    console.error(' Вкладка не найдена:', tabName);
   }
-  
-  if (targetBtn) {
-    targetBtn.classList.add('active');
-  }
-  
-  // Инициализируем контент
-  setTimeout(function() {
-    if (tabName === 'calendar' && typeof CalendarView !== 'undefined') {
-      CalendarView.render();
-    } else if (tabName === 'work' && typeof WorkView !== 'undefined') {
-      WorkView.render();
-    } else if (tabName === 'family' && typeof FamilyView !== 'undefined') {
-      FamilyView.render();
-    } else if (tabName === 'notes' && typeof NotesView !== 'undefined') {
-      NotesView.render();
-    } else if (tabName === 'stats' && typeof StatsView !== 'undefined') {
-      StatsView.render();
-    } else if (tabName === 'dog' && typeof DogView !== 'undefined') {
-      DogView.render();
-    }
-  }, 100);
 };
 
-// Открытие формы добавления
+// ============================================
+// ОТРИСОВКА КОНТЕНТА ВКЛАДОК
+// ============================================
+function renderTabContent(tabName) {
+  console.log('📄 Рендеринг вкладки:', tabName);
+  
+  switch(tabName) {
+    case 'calendar':
+      if (typeof CalendarView !== 'undefined' && CalendarView.render) {
+        CalendarView.render();
+      } else {
+        console.warn('⚠️ CalendarView не загружен, показываем заглушку');
+        renderCalendarFallback();
+      }
+      break;
+      
+    case 'work':
+      if (typeof WorkView !== 'undefined' && WorkView.render) {
+        WorkView.render();
+      } else {
+        console.warn('️ WorkView не загружен');
+        renderWorkFallback();
+      }
+      break;
+      
+    case 'family':
+      if (typeof FamilyView !== 'undefined' && FamilyView.render) {
+        FamilyView.render();
+      } else {
+        renderFamilyFallback();
+      }
+      break;
+      
+    case 'notes':
+      if (typeof NotesView !== 'undefined' && NotesView.render) {
+        NotesView.render();
+      } else {
+        renderNotesFallback();
+      }
+      break;
+      
+    case 'tasks':
+      renderTasksFallback();
+      break;
+      
+    case 'stats':
+      if (typeof StatsView !== 'undefined' && StatsView.render) {
+        StatsView.render();
+      } else {
+        renderStatsFallback();
+      }
+      break;
+      
+    default:
+      console.warn('⚠️ Неизвестная вкладка:', tabName);
+  }
+}
+
+// ============================================
+// ЗАГЛУШКИ ДЛЯ ВКЛАДОК (если View не загружены)
+// ============================================
+function renderCalendarFallback() {
+  const container = document.getElementById('calendarView');
+  if (!container) return;
+  
+  const today = new Date();
+  const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+  
+  container.innerHTML = `
+    <div style="padding:20px;">
+      <h3 style="text-align:center;margin-bottom:20px;color:#1e293b;">
+        ${monthNames[today.getMonth()]} ${today.getFullYear()}
+      </h3>
+      <div style="background:white;padding:30px;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+        <p style="text-align:center;font-size:18px;color:#64748b;">
+          📅 ${today.getDate()} ${monthNames[today.getMonth()]}
+        </p>
+        <p style="text-align:center;margin-top:20px;color:#94a3b8;font-size:14px;">
+          Календарь загружен
+        </p>
+      </div>
+    </div>
+  `;
+}
+
+function renderWorkFallback() {
+  const container = document.getElementById('workView');
+  if (!container) return;
+  
+  const entries = Store.getEntries().filter(e => e.category === 'work');
+  
+  let html = `
+    <div style="padding:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h3 style="margin:0;color:#1e293b;">💼 Работа</h3>
+        <button onclick="openWorkForm()" style="padding:10px 20px;background:linear-gradient(135deg,#ff6b9d,#ff8e53);color:white;border:none;border-radius:12px;font-weight:600;cursor:pointer;">
+          + Добавить
+        </button>
+      </div>
+  `;
+  
+  if (entries.length === 0) {
+    html += `
+      <div style="background:#f8fafc;padding:40px;border-radius:16px;text-align:center;">
+        <p style="color:#94a3b8;margin:0;">Нет записей</p>
+        <button onclick="openWorkForm()" style="margin-top:15px;padding:12px 30px;background:linear-gradient(135deg,#ff6b9d,#ff8e53);color:white;border:none;border-radius:12px;font-weight:600;cursor:pointer;">
+          + Добавить первую запись
+        </button>
+      </div>
+    `;
+  } else {
+    html += `<div style="display:flex;flex-direction:column;gap:12px;">`;
+    entries.forEach(entry => {
+      html += `
+        <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:4px solid #ff6b9d;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-weight:600;color:#1e293b;margin-bottom:5px;">${entry.name || 'Клиент'}</div>
+              <div style="font-size:13px;color:#64748b;">
+                 ${entry.time} • ${entry.duration} мин
+                ${entry.service ? ' • ' + entry.service : ''}
+              </div>
+            </div>
+            ${entry.price ? `<div style="font-weight:700;color:#ff6b9d;">${entry.price}₽</div>` : ''}
+          </div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+  
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function renderFamilyFallback() {
+  const container = document.getElementById('familyView');
+  if (!container) return;
+  
+  container.innerHTML = `
+    <div style="padding:20px;">
+      <h3 style="margin-bottom:20px;color:#1e293b;">👨👩‍👧 Семья</h3>
+      <div style="background:#f8fafc;padding:40px;border-radius:16px;text-align:center;">
+        <p style="color:#94a3b8;">Нет членов семьи</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderNotesFallback() {
+  const container = document.getElementById('notesView');
+  if (!container) return;
+  
+  container.innerHTML = `
+    <div style="padding:20px;">
+      <h3 style="margin-bottom:20px;color:#1e293b;">📝 Заметки</h3>
+      <div style="background:#f8fafc;padding:40px;border-radius:16px;text-align:center;">
+        <p style="color:#94a3b8;">Нет заметок</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderTasksFallback() {
+  const container = document.getElementById('tasksView');
+  if (!container) return;
+  
+  container.innerHTML = `
+    <div style="padding:20px;">
+      <h3 style="margin-bottom:20px;color:#1e293b;">✅ Задачи</h3>
+      <div style="background:#f8fafc;padding:40px;border-radius:16px;text-align:center;">
+        <p style="color:#94a3b8;">Нет задач</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderStatsFallback() {
+  const container = document.getElementById('statsView');
+  if (!container) return;
+  
+  const entries = Store.getEntries();
+  const workEntries = entries.filter(e => e.category === 'work');
+  const totalIncome = workEntries.reduce((sum, e) => sum + (parseInt(e.price) || 0), 0);
+  
+  container.innerHTML = `
+    <div style="padding:20px;">
+      <h3 style="margin-bottom:20px;color:#1e293b;">📊 Статистика</h3>
+      <div style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:24px;border-radius:16px;margin-bottom:16px;">
+        <div style="font-size:32px;font-weight:700;margin-bottom:8px;">${totalIncome}₽</div>
+        <div style="opacity:0.9;">Общий доход</div>
+      </div>
+      <div style="background:white;padding:20px;border-radius:16px;">
+        <div style="margin-bottom:12px;">
+          <div style="color:#64748b;font-size:14px;">Всего записей</div>
+          <div style="font-size:24px;font-weight:700;color:#1e293b;">${entries.length}</div>
+        </div>
+        <div>
+          <div style="color:#64748b;font-size:14px;">Рабочих записей</div>
+          <div style="font-size:24px;font-weight:700;color:#1e293b;">${workEntries.length}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================
+// ОТКРЫТИЕ ФОРМЫ ДОБАВЛЕНИЯ
+// ============================================
 window.openQuickAdd = function() {
-  const activeTab = document.querySelector('.nav-item.active');
-  const tabName = activeTab ? activeTab.dataset.tab : 'calendar';
+  console.log('➕ Кнопка + нажата, текущая вкладка:', AppState.currentTab);
+  
+  const tabName = AppState.currentTab;
   
   if (tabName === 'calendar' || tabName === 'work') {
     if (typeof window.openWorkForm === 'function') {
       window.openWorkForm();
     } else {
-      alert('Форма добавления записи');
+      alert('Форма добавления записи будет здесь');
     }
   } else if (tabName === 'family') {
     if (typeof window.openFamilyForm === 'function') {
       window.openFamilyForm();
+    } else {
+      alert('Форма добавления члена семьи');
     }
   } else if (tabName === 'notes') {
     if (typeof window.openNoteForm === 'function') {
       window.openNoteForm();
+    } else {
+      alert('Форма добавления заметки');
     }
-  } else if (tabName === 'dog') {
-    if (typeof window.openDogForm === 'function') {
-      window.openDogForm();
-    }
+  } else {
+    alert('Выберите вкладку и нажмите + для добавления');
   }
 };
 
-// Настройка навигации
+// ============================================
+// НАСТРОЙКА НАВИГАЦИИ
+// ============================================
 function setupNavigation() {
+  console.log('🔧 Настройка навигации...');
+  
   document.querySelectorAll('.nav-item').forEach(btn => {
     btn.addEventListener('click', function() {
       const tabName = this.dataset.tab;
-      window.switchTab(tabName);
+      switchTab(tabName);
     });
   });
+  
+  console.log('✅ Навигация настроена');
 }
 
-// Инициализация
-function initApp() {
-  console.log(' Инициализация приложения...');
-  
-  // Проверяем наличие необходимых объектов
-  if (typeof Storage === 'undefined') {
-    console.error('Storage не найден!');
-    return;
-  }
-  
-  if (typeof Store === 'undefined') {
-    console.error('Store не найден!');
-    return;
-  }
-  
-  // Настраиваем навигацию
-  setupNavigation();
-  
-  // Открываем первую вкладку
-  setTimeout(function() {
-    window.switchTab('calendar');
-    console.log(' Приложение готово!');
-  }, 500);
-}
-
-// Запуск при загрузке
+// ============================================
+// ЗАПУСК ПРИ ЗАГРУЗКЕ
+// ============================================
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initApp);
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('📄 DOM загружен, запускаем...');
+    setupNavigation();
+    initApp();
+  });
 } else {
+  console.log('📄 DOM уже загружен, запускаем...');
+  setupNavigation();
   initApp();
 }
 
-console.log(' app.js загружен');
+console.log('✅ app.js загружен и готов к работе');
